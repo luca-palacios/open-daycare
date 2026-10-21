@@ -15,7 +15,7 @@ export type Post = {
   photo?: { label: string };
 };
 
-const TEACHER_TIME_ZONE = "America/Argentina/Buenos_Aires";
+export const TEACHER_TIME_ZONE = "America/Argentina/Buenos_Aires";
 const UTC_OFFSET = "-03:00"; // Argentina no aplica horario de verano
 
 export const room = {

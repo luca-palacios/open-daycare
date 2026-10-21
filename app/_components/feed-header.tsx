@@ -1,0 +1,35 @@
+"use client";
+
+import { formatFeedDate } from "../_lib/format-date";
+import { useVisitorTimeZone } from "../_lib/use-visitor-time-zone";
+
+type FeedHeaderProps = {
+  eyebrow: string;
+  teacherName: string;
+  childrenCount: number;
+};
+
+export function FeedHeader({
+  eyebrow,
+  teacherName,
+  childrenCount,
+}: FeedHeaderProps) {
+  const timeZone = useVisitorTimeZone();
+  const dateLabel = timeZone ? formatFeedDate(new Date(), timeZone) : "";
+
+  return (
+    <header className="mb-6">
+      <p className="mb-1 text-[12.5px] font-extrabold uppercase tracking-[0.8px] text-brand-strong">
+        {eyebrow}
+      </p>
+      <h1 className="font-display text-[30px] font-semibold leading-tight text-ink">
+        Buenas, {teacherName}
+      </h1>
+      <p className="mt-[5px] min-h-[21px] text-[14.5px] text-muted">
+        {childrenCount} niños
+        <span aria-hidden="true"> · </span>
+        <span data-testid="feed-date">{dateLabel || "\u00A0"}</span>
+      </p>
+    </header>
+  );
+}

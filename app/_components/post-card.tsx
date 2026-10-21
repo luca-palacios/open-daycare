@@ -26,18 +26,18 @@ function PostAvatar({ post }: { post: Post }) {
 export function PostCard({ post, timeLabel }: PostCardProps) {
   return (
     <article className="rounded-[20px] border border-line bg-surface px-4 py-4 shadow-[0_4px_16px_-12px_rgba(120,90,60,0.5)] sm:px-[22px] sm:py-5">
-      <header className="mb-3.5 flex items-center gap-3">
-        <PostAvatar post={post} />
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate font-display text-[16.5px] font-semibold text-ink">
-            {post.authorName}
-          </h2>
-          <p className="text-[12.5px] text-faint">
-            <time dateTime={post.publishedAt}>{timeLabel}</time> · publicado por
-            vos
-          </p>
+      <header className="mb-3.5 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
+        <div className="row-span-2">
+          <PostAvatar post={post} />
         </div>
+        <h2 className="truncate font-display text-[16.5px] font-semibold text-ink">
+          {post.authorName}
+        </h2>
         <PostKindBadge kind={post.kind} />
+        <p className="col-span-2 text-[12.5px] text-faint">
+          <time dateTime={post.publishedAt}>{timeLabel}</time> · publicado por
+          vos
+        </p>
       </header>
 
       <p className="mb-2.5 text-[12.5px] text-faint">Para: {post.audience}</p>

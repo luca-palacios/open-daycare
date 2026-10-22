@@ -57,9 +57,26 @@ test("muestra las tres publicaciones de la referencia", async ({ page }) => {
 test("muestra la fecha del visitante en español", async ({ page }) => {
   await page.goto(HOME);
 
-  await expect(page.getByTestId("feed-date")).toHaveText(
-    /^(lunes|martes|miércoles|jueves|viernes|sábado|domingo) \d{1,2} (ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)$/,
+  const dateLabel = page.getByTestId("feed-date");
+  await expect(dateLabel).toHaveText(
+    /^(lunes|martes|miércoles|jueves|viernes|sábado|domingo) \d{1,2} (ene|feb|mar|abr|may|jun|jul|ago|sept|oct|nov|dic)$/,
   );
+
+  const expected = await page.evaluate(() => {
+    const parts = new Intl.DateTimeFormat("es-AR", {
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+    }).formatToParts(new Date());
+    const value = (type: string) =>
+      parts.find((part) => part.type === type)?.value ?? "";
+
+    return [value("weekday"), value("day"), value("month").replace(/\.$/, "")]
+      .filter(Boolean)
+      .join(" ");
+  });
+
+  await expect(dateLabel).toHaveText(expected);
 });
 
 test("formatea las horas en la zona horaria del visitante", async ({
@@ -148,6 +165,13 @@ test.describe("menú móvil", () => {
     await expect(button).toHaveAttribute("aria-expanded", "true");
     await expect(panel).toBeVisible();
 
+    await button.click();
+    await expect(button).toHaveAttribute("aria-expanded", "false");
+    await expect(panel).toBeHidden();
+
+    await button.click();
+    await expect(button).toHaveAttribute("aria-expanded", "true");
+
     await page.keyboard.press("Escape");
     await expect(button).toHaveAttribute("aria-expanded", "false");
     await expect(panel).toBeHidden();
@@ -160,17 +184,35 @@ test("Feed lleva a la home y las demás acciones no navegan", async ({
 }) => {
   await page.goto(HOME);
 
+  const hrefs = await page
+    .locator("a")
+    .evaluateAll((anchors) =>
+      anchors.map((anchor) => anchor.getAttribute("href")),
+    );
+  expect(new Set(hrefs)).toEqual(new Set(["/"]));
+
   await page.getByRole("link", { name: "Feed" }).click();
   await expect(page).toHaveURL(HOME);
 
-  await page.getByRole("button", { name: "Niños" }).click();
-  await expect(page).toHaveURL(HOME);
+  const inertButtons = [
+    "Nueva publicación",
+    "Niños",
+    "Avisos",
+    "Mi cuenta",
+    "Cerrar sesión",
+    /Compartí un momento/,
+    /^Editar$/,
+  ];
 
-  await page.getByRole("button", { name: "Nueva publicación" }).click();
-  await expect(page).toHaveURL(HOME);
+  for (const name of inertButtons) {
+    const buttons = page.getByRole("button", { name });
+    const count = await buttons.count();
 
-  await page.getByRole("button", { name: "Editar" }).first().click();
-  await expect(page).toHaveURL(HOME);
+    for (let index = 0; index < count; index += 1) {
+      await buttons.nth(index).click();
+      await expect(page).toHaveURL(HOME);
+    }
+  }
 });
 
 test("no desborda horizontalmente en 375, 768 y 1280 px", async ({ page }) => {

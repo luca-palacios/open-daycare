@@ -99,18 +99,18 @@ Convenciones:
 
 ## Acceptance criteria
 
-- [ ] `/` muestra las tres publicaciones con los textos, destinatarios y contadores de la referencia.
-- [ ] En escritorio, la barra lateral y el feed conservan la composición de `references/ui/feed.dc.html`.
-- [ ] La página no presenta desbordamiento horizontal a 375 px, 768 px ni 1280 px.
-- [ ] Por debajo de 1024 px, el botón del menú abre y cierra la navegación y expone su estado con `aria-expanded`.
-- [ ] El menú móvil se cierra con la tecla `Escape`.
-- [ ] **Feed** lleva a `/`; ninguna acción lleva a una ruta inexistente.
-- [ ] La fecha del encabezado corresponde al día del visitante y está en español.
-- [ ] Las horas de las publicaciones se muestran en la zona horaria del visitante.
-- [ ] Un mismo instante produce horas distintas al simular dos zonas horarias diferentes.
-- [ ] Las publicaciones se agrupan bajo `PUBLICADO HOY` solo si son del día local del visitante.
-- [ ] No hay errores de hidratación ni de consola.
-- [ ] `npm run lint`, `npx tsc --noEmit` y `npm run build` finalizan correctamente.
+- [x] `/` muestra las tres publicaciones con los textos, destinatarios y contadores de la referencia. Evidencia: `tests/home.spec.ts` → "muestra las tres publicaciones de la referencia" (9/9 tests en verde).
+- [x] En escritorio, la barra lateral y el feed conservan la composición de `references/ui/feed.dc.html`. Evidencia: captura `.playwright-mcp/spec01-desktop.png` (1280 px) comparada con la referencia.
+- [x] La página no presenta desbordamiento horizontal a 375 px, 768 px ni 1280 px. Evidencia: `tests/home.spec.ts` → "no desborda horizontalmente en 375, 768 y 1280 px"; capturas `spec01-mobile.png`, `spec01-tablet.png` y `spec01-desktop.png`.
+- [x] Por debajo de 1024 px, el botón del menú abre y cierra la navegación y expone su estado con `aria-expanded`. Evidencia: `tests/home.spec.ts` → "abre y cierra con Escape exponiendo aria-expanded" (abre, cierra con el botón, reabre y cierra con `Escape` a 375 px).
+- [x] El menú móvil se cierra con la tecla `Escape`. Evidencia: mismo test; además verifica el foco devuelto al botón.
+- [x] **Feed** lleva a `/`; ninguna acción lleva a una ruta inexistente. Evidencia: `tests/home.spec.ts` → "Feed lleva a la home y las demás acciones no navegan"; todos los `a[href]` apuntan a `/` y los botones se pulsan sin cambiar de URL.
+- [x] La fecha del encabezado corresponde al día del visitante y está en español. Evidencia: `tests/home.spec.ts` → "muestra la fecha del visitante en español"; contrasta el texto con `Intl.DateTimeFormat("es-AR")` en el navegador.
+- [x] Las horas de las publicaciones se muestran en la zona horaria del visitante. Evidencia: `tests/home.spec.ts` → "formatea las horas en la zona horaria del visitante"; cada `<time>` se compara con su `datetime` formateado en la zona del contexto.
+- [x] Un mismo instante produce horas distintas al simular dos zonas horarias diferentes. Evidencia: mismo test con `America/Argentina/Buenos_Aires` y `Europe/Madrid`; las listas de horas difieren.
+- [x] Las publicaciones se agrupan bajo `PUBLICADO HOY` solo si son del día local del visitante. Evidencia: tests de agrupación con `America/Argentina/Buenos_Aires` (1 grupo) y `Asia/Bangkok` (2 grupos, solo uno rotulado `PUBLICADO HOY`).
+- [x] No hay errores de hidratación ni de consola. Evidencia: `tests/home.spec.ts` → "no registra errores de consola ni de hidratación"; capturas automatizadas en 375, 768 y 1280 px sin errores.
+- [x] `npm run lint`, `npx tsc --noEmit` y `npm run build` finalizan correctamente. Evidencia: lint sin errores (solo 2 avisos previos en `tests/seed.spec.ts`), `tsc` sin salida, build de Next.js 16.4.2 completado con la ruta `/` generada.
 
 ---
 

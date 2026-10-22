@@ -1,14 +1,28 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "playwright-test": {
-      "type": "local",
-      "command": [
-        "npx",
-        "playwright",
-        "run-test-mcp-server"
-      ],
-      "enabled": true
+    "servers": {
+      "playwright-test": {
+        "type": "local",
+        "command": [
+          "npx",
+          "playwright",
+          "run-test-mcp-server"
+        ]
+      },
+      "playwright": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@playwright/mcp@latest",
+          "--headless",
+          "--isolated",
+          "--output-dir",
+          ".playwright-mcp"
+        ],
+        "codemode": false
+      }
     }
   },
   "tools": {

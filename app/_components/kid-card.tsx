@@ -1,16 +1,9 @@
 import Link from "next/link";
+import { KID_AVATAR_TONES } from "../_lib/avatar-tones";
 import { calculateAgeInYears } from "../_lib/kid-age";
 import { normalizeText } from "../_lib/normalize-text";
 import type { Kid } from "../_data/kids";
 import { ChevronRightIcon } from "./icons";
-
-const AVATAR_TONES: Record<Kid["avatarTone"], string> = {
-  sky: "bg-[#A9D9E8] text-[#1F7A93]",
-  rose: "bg-[#F4B8CC] text-[#C44A7A]",
-  mint: "bg-[#B9DEC4] text-[#3E8B62]",
-  sun: "bg-[#F4DC8E] text-[#9A7B1E]",
-  lilac: "bg-[#C9B6E8] text-[#7B5FC0]",
-};
 
 const ALLERGY_LABELS = [
   { keyword: "mani", label: "MANÍ" },
@@ -56,7 +49,7 @@ export function KidCard({ kid }: { kid: Kid }) {
     >
       <span
         aria-hidden="true"
-        className={`flex h-12 w-12 flex-none items-center justify-center rounded-full font-display text-[19px] font-semibold ${AVATAR_TONES[kid.avatarTone]}`}
+        className={`flex h-12 w-12 flex-none items-center justify-center rounded-full font-display text-[19px] font-semibold ${KID_AVATAR_TONES[kid.avatarTone]}`}
       >
         {kid.initials}
       </span>

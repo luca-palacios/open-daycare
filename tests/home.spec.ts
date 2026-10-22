@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { gotoHydrated } from "./helpers";
 
 const HOME = "http://localhost:3000/";
 
@@ -14,7 +15,7 @@ function trackErrors(page: Page): string[] {
 }
 
 test("muestra las tres publicaciones de la referencia", async ({ page }) => {
-  await page.goto(HOME);
+  await gotoHydrated(page, HOME);
 
   await expect(page.getByRole("heading", { name: "Mateo" })).toHaveCount(2);
   await expect(
@@ -55,7 +56,7 @@ test("muestra las tres publicaciones de la referencia", async ({ page }) => {
 });
 
 test("muestra la fecha del visitante en español", async ({ page }) => {
-  await page.goto(HOME);
+  await gotoHydrated(page, HOME);
 
   const dateLabel = page.getByTestId("feed-date");
   await expect(dateLabel).toHaveText(
@@ -88,7 +89,7 @@ test("formatea las horas en la zona horaria del visitante", async ({
   for (const timeZoneId of zones) {
     const context = await browser.newContext({ timezoneId: timeZoneId });
     const page = await context.newPage();
-    await page.goto(HOME);
+    await gotoHydrated(page, HOME);
 
     const times = page.locator("article time");
     await expect(times).toHaveCount(3);
@@ -120,7 +121,7 @@ test.describe("agrupación por día local", () => {
     test("agrupa las publicaciones de hoy bajo PUBLICADO HOY", async ({
       page,
     }) => {
-      await page.goto(HOME);
+      await gotoHydrated(page, HOME);
 
       const labels = page.getByTestId("feed-day-label");
       await expect(labels).toHaveCount(1);
@@ -135,7 +136,7 @@ test.describe("agrupación por día local", () => {
     test("separa las publicaciones que caen en otro día local", async ({
       page,
     }) => {
-      await page.goto(HOME);
+      await gotoHydrated(page, HOME);
 
       const labels = page.getByTestId("feed-day-label");
       await expect(labels).toHaveCount(2);
@@ -153,7 +154,7 @@ test.describe("menú móvil", () => {
   test("abre y cierra con Escape exponiendo aria-expanded", async ({
     page,
   }) => {
-    await page.goto(HOME);
+    await gotoHydrated(page, HOME);
 
     const button = page.locator("button[aria-controls='mobile-nav']");
     const panel = page.locator("#mobile-nav");
@@ -182,7 +183,7 @@ test.describe("menú móvil", () => {
 test("Feed lleva a la home y las demás acciones no navegan", async ({
   page,
 }) => {
-  await page.goto(HOME);
+  await gotoHydrated(page, HOME);
 
   const hrefs = await page
     .locator("a")
@@ -218,7 +219,7 @@ test("Feed lleva a la home y las demás acciones no navegan", async ({
 });
 
 test("no desborda horizontalmente en 375, 768 y 1280 px", async ({ page }) => {
-  await page.goto(HOME);
+  await gotoHydrated(page, HOME);
 
   for (const width of [375, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
@@ -232,7 +233,7 @@ test("no desborda horizontalmente en 375, 768 y 1280 px", async ({ page }) => {
 test("no registra errores de consola ni de hidratación", async ({ page }) => {
   const errors = trackErrors(page);
 
-  await page.goto(HOME);
+  await gotoHydrated(page, HOME);
   await expect(page.locator("article")).toHaveCount(3);
   await page.waitForTimeout(500);
 

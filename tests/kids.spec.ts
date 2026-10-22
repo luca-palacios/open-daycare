@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { kids } from "../app/_data/kids";
+import { gotoHydrated } from "./helpers";
 
 const BASE = "http://localhost:3000";
 const KIDS = `${BASE}/kids`;
@@ -39,7 +40,7 @@ function ageInArgentina(birthDate: string, now: Date = new Date()): number {
 }
 
 test("muestra los ocho niños y un contador de ocho", async ({ page }) => {
-  await page.goto(KIDS);
+  await gotoHydrated(page, KIDS);
 
   await expect(
     page.getByRole("heading", { level: 1, name: "Niños" }),
@@ -57,14 +58,14 @@ test("muestra los ocho niños y un contador de ocho", async ({ page }) => {
 });
 
 test("la home muestra ocho niños y conserva el feed", async ({ page }) => {
-  await page.goto(`${BASE}/`);
+  await gotoHydrated(page, `${BASE}/`);
 
   await expect(page.getByText(/8 niños\s*·/)).toBeVisible();
   await expect(page.locator("article")).toHaveCount(3);
 });
 
 test("busca en vivo sin distinguir mayúsculas ni acentos", async ({ page }) => {
-  await page.goto(KIDS);
+  await gotoHydrated(page, KIDS);
 
   const search = page.getByRole("searchbox", { name: "Buscar niño" });
 
@@ -89,8 +90,9 @@ test("busca en vivo sin distinguir mayúsculas ni acentos", async ({ page }) => 
 test("cada tarjeta abre el perfil del niño y vuelve al listado", async ({
   page,
 }) => {
+  await gotoHydrated(page, KIDS);
+
   for (const kid of kids) {
-    await page.goto(KIDS);
     await page.getByTestId("kid-card").filter({ hasText: kid.name }).click();
 
     await expect(page).toHaveURL(`${KIDS}/${kid.id}`);
@@ -103,13 +105,14 @@ test("cada tarjeta abre el perfil del niño y vuelve al listado", async ({
 
     await page.getByRole("link", { name: "Volver a Niños" }).click();
     await expect(page).toHaveURL(KIDS);
+    await expect(page.getByTestId("kid-card")).toHaveCount(kids.length);
   }
 });
 
 test("Mateo muestra su alerta y sus dos padres con estados", async ({
   page,
 }) => {
-  await page.goto(`${KIDS}/mateo-fernandez`);
+  await gotoHydrated(page, `${KIDS}/mateo-fernandez`);
 
   await expect(page.getByText("Alergias y notas")).toBeVisible();
   await expect(page.getByText(/Alergia al maní/)).toBeVisible();
@@ -129,16 +132,16 @@ test("Mateo muestra su alerta y sus dos padres con estados", async ({
 test("omite la alerta sin alergias y avisa cuando no hay padres", async ({
   page,
 }) => {
-  await page.goto(`${KIDS}/sofia-mendez`);
+  await gotoHydrated(page, `${KIDS}/sofia-mendez`);
   await expect(page.getByText("Alergias y notas")).toHaveCount(0);
 
-  await page.goto(`${KIDS}/valentina-soto`);
+  await gotoHydrated(page, `${KIDS}/valentina-soto`);
   await expect(page.getByText("Alergias y notas")).toHaveCount(0);
   await expect(page.getByText("Sin padres vinculados")).toBeVisible();
 });
 
 test("un ID inexistente devuelve 404", async ({ page }) => {
-  const response = await page.goto(`${KIDS}/no-existe`);
+  const response = await gotoHydrated(page, `${KIDS}/no-existe`);
 
   expect(response?.status()).toBe(404);
   await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
@@ -149,18 +152,18 @@ test("marca la sección activa en escritorio", async ({ page }) => {
     'nav[aria-label="Navegación principal"] a[aria-current="page"]:visible',
   );
 
-  await page.goto(`${BASE}/`);
+  await gotoHydrated(page, `${BASE}/`);
   await expect(active).toHaveText(["Feed"]);
 
-  await page.goto(KIDS);
+  await gotoHydrated(page, KIDS);
   await expect(active).toHaveText(["Niños"]);
 
-  await page.goto(`${KIDS}/mateo-fernandez`);
+  await gotoHydrated(page, `${KIDS}/mateo-fernandez`);
   await expect(active).toHaveText(["Niños"]);
 });
 
 test("navega entre el feed y niños", async ({ page }) => {
-  await page.goto(`${BASE}/`);
+  await gotoHydrated(page, `${BASE}/`);
 
   await page.getByRole("link", { name: "Niños", exact: true }).click();
   await expect(page).toHaveURL(KIDS);
@@ -173,7 +176,7 @@ test.describe("menú móvil", () => {
   test.use({ viewport: { width: 375, height: 900 } });
 
   test("marca Niños activo y permite volver al feed", async ({ page }) => {
-    await page.goto(KIDS);
+    await gotoHydrated(page, KIDS);
 
     const toggle = page.locator("button[aria-controls='mobile-nav']:visible");
     const active = page.locator("#mobile-nav:visible a[aria-current='page']");
@@ -192,11 +195,11 @@ test.describe("menú móvil", () => {
 });
 
 test("las acciones fuera de alcance no navegan", async ({ page }) => {
-  await page.goto(KIDS);
+  await gotoHydrated(page, KIDS);
   await page.getByRole("button", { name: "Agregar niño" }).click();
   await expect(page).toHaveURL(KIDS);
 
-  await page.goto(`${KIDS}/mateo-fernandez`);
+  await gotoHydrated(page, `${KIDS}/mateo-fernandez`);
 
   for (const name of ["Editar", "Resumen del día", "Vincular otro padre"]) {
     await page.getByRole("button", { name }).click();
@@ -209,7 +212,7 @@ test("no desborda horizontalmente en 375, 768 y 1280 px", async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
 
     for (const path of [KIDS, `${KIDS}/mateo-fernandez`]) {
-      await page.goto(path);
+      await gotoHydrated(page, path);
       const overflow = await page.evaluate(
         () =>
           document.documentElement.scrollWidth -
@@ -223,7 +226,7 @@ test("no desborda horizontalmente en 375, 768 y 1280 px", async ({ page }) => {
 test("no registra errores de consola ni de hidratación", async ({ page }) => {
   const errors = trackErrors(page);
 
-  await page.goto(KIDS);
+  await gotoHydrated(page, KIDS);
   await expect(page.getByTestId("kid-card")).toHaveCount(kids.length);
   await page.waitForTimeout(500);
 

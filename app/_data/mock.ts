@@ -1,4 +1,5 @@
 import { getLocalDayKey } from "../_lib/format-date";
+import { kids } from "./kids";
 
 export type PostKind = "achievement" | "activity" | "announcement";
 
@@ -22,7 +23,7 @@ export const room = {
   name: "Sala Soles",
   shortName: "Soles",
   eyebrow: "Guardería · Sala Soles",
-  childrenCount: 12,
+  childrenCount: kids.length,
 } as const;
 
 export const teacher = {

@@ -114,6 +114,23 @@ export function MegaphoneIcon(props: IconProps) {
   );
 }
 
+export function SearchIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  );
+}
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <svg {...base} strokeWidth={2.2} {...props}>
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
 export function MenuIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { connection } from "next/server";
 import { AppShell } from "../_components/app-shell";
-import { KidCard } from "../_components/kid-card";
+import { KidsDirectory } from "../_components/kids-directory";
 import { KidsHeader } from "../_components/kids-header";
-import { KidsSearch } from "../_components/kids-search";
 import { kids } from "../_data/kids";
 import { room } from "../_data/mock";
 
@@ -11,38 +11,35 @@ export const metadata: Metadata = {
   title: "Niños · OpenDayCare",
 };
 
-export default async function KidsPage() {
+async function KidsContent() {
   await connection();
+  return <KidsDirectory kids={kids} roomName={room.shortName} />;
+}
 
+function KidsSkeleton() {
+  return (
+    <div aria-hidden="true" className="flex flex-col gap-[22px]">
+      <div className="h-[46px] animate-pulse rounded-[14px] border border-line bg-surface" />
+      <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
+        {Array.from({ length: 8 }, (_, index) => (
+          <div
+            key={index}
+            className="h-[81px] animate-pulse rounded-[18px] border border-line bg-surface"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function KidsPage() {
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-[880px] px-4 pb-20 pt-6 sm:px-8 sm:pt-8 lg:px-10 lg:pb-20 lg:pt-[34px]">
         <KidsHeader />
-        <KidsSearch />
-
-        <section aria-labelledby="kids-room">
-          <div className="mb-3.5 flex items-center gap-3">
-            <h2
-              id="kids-room"
-              className="text-[12.5px] font-extrabold uppercase tracking-[0.8px] text-ink"
-            >
-              Sala {room.shortName}
-            </h2>
-            <span
-              data-testid="kids-count"
-              className="text-[13px] text-faint"
-            >
-              {kids.length} niños
-            </span>
-            <span aria-hidden="true" className="h-px flex-1 bg-[#E7DAC8]" />
-          </div>
-
-          <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
-            {kids.map((kid) => (
-              <KidCard key={kid.id} kid={kid} />
-            ))}
-          </div>
-        </section>
+        <Suspense fallback={<KidsSkeleton />}>
+          <KidsContent />
+        </Suspense>
       </div>
     </AppShell>
   );

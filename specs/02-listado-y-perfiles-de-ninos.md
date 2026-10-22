@@ -89,19 +89,19 @@ Convenciones:
 
 ## Acceptance criteria
 
-- [ ] `/kids` muestra los ocho nombres de `references/ui/ninos.dc.html` y un contador de ocho.
-- [ ] La home muestra ocho niños; `/` y su feed siguen funcionando.
-- [ ] Buscar por una parte del nombre, con distinta capitalización o sin acentos, filtra las tarjetas y actualiza el contador.
-- [ ] Una búsqueda sin coincidencias muestra un estado vacío.
-- [ ] Cada tarjeta abre `/kids/[id]` con los datos del niño seleccionado; «Volver a Niños» regresa al listado.
-- [ ] Mateo muestra su alerta y sus dos padres con estados activo y pendiente.
-- [ ] Un niño sin alergias no muestra alerta; uno sin padres muestra «Sin padres vinculados».
-- [ ] Las edades corresponden a las fechas de nacimiento y al día actual en Argentina.
-- [ ] Un ID inexistente devuelve 404.
-- [ ] «Niños» aparece activo en listado y perfil; «Feed» vuelve a aparecer activo en `/`, también en el menú móvil.
-- [ ] Ninguna acción fuera de alcance navega a una ruta inexistente.
-- [ ] No hay desbordamiento horizontal a 375, 768 ni 1280 px.
-- [ ] Pasan las pruebas de `tests/kids.spec.ts`, `npm run lint`, `npx tsc --noEmit` y `npm run build`.
+- [x] `/kids` muestra los ocho nombres de `references/ui/ninos.dc.html` y un contador de ocho.
+- [x] La home muestra ocho niños; `/` y su feed siguen funcionando.
+- [x] Buscar por una parte del nombre, con distinta capitalización o sin acentos, filtra las tarjetas y actualiza el contador.
+- [x] Una búsqueda sin coincidencias muestra un estado vacío.
+- [x] Cada tarjeta abre `/kids/[id]` con los datos del niño seleccionado; «Volver a Niños» regresa al listado.
+- [x] Mateo muestra su alerta y sus dos padres con estados activo y pendiente.
+- [x] Un niño sin alergias no muestra alerta; uno sin padres muestra «Sin padres vinculados».
+- [x] Las edades corresponden a las fechas de nacimiento y al día actual en Argentina.
+- [x] Un ID inexistente devuelve 404.
+- [x] «Niños» aparece activo en listado y perfil; «Feed» vuelve a aparecer activo en `/`, también en el menú móvil.
+- [x] Ninguna acción fuera de alcance navega a una ruta inexistente.
+- [x] No hay desbordamiento horizontal a 375, 768 ni 1280 px.
+- [x] Pasan las pruebas de `tests/kids.spec.ts`, `npm run lint`, `npx tsc --noEmit` y `npm run build`.
 
 ---
 

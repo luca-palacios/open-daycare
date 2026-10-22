@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { connection } from "next/server";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { AppShell } from "../../_components/app-shell";
 import { KidAllergyAlert } from "../../_components/kid-allergy-alert";
 import { KidDetails } from "../../_components/kid-details";

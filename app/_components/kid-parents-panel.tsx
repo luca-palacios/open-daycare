@@ -24,6 +24,8 @@ function statusBadge(parent: Parent): { label: string; tone: string } {
 
 function ParentRow({ parent, index }: { parent: Parent; index: number }) {
   const badge = statusBadge(parent);
+  const relationship =
+    parent.relationship.charAt(0).toUpperCase() + parent.relationship.slice(1);
 
   return (
     <li className="flex items-center gap-3">
@@ -38,7 +40,7 @@ function ParentRow({ parent, index }: { parent: Parent; index: number }) {
           {parent.name}
         </span>
         <span className="block text-[12.5px] text-faint">
-          {parent.relationship} · {statusLabel(parent)}
+          {relationship} · {statusLabel(parent)}
         </span>
       </span>
       <span

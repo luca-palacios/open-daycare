@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ComponentType } from "react";
 import { BellIcon, ChildrenIcon, HomeIcon, LogoutIcon, PlusIcon, SunLogo, UserIcon } from "./icons";
 import type { IconProps } from "./icons";
@@ -12,10 +15,15 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Feed", icon: HomeIcon, href: "/" },
-  { label: "Niños", icon: ChildrenIcon },
+  { label: "Niños", icon: ChildrenIcon, href: "/kids" },
   { label: "Avisos", icon: BellIcon },
   { label: "Mi cuenta", icon: UserIcon },
 ];
+
+function isActiveSection(href: string, pathname: string): boolean {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 const navItemBase =
   "flex w-full items-center gap-3 rounded-xl px-3 py-[11px] text-left text-[14.5px] transition-colors";
@@ -53,17 +61,21 @@ export function NewPostButton({ className = "" }: { className?: string }) {
 }
 
 export function NavMenu({ onNavigate }: { onNavigate?: () => void }) {
+  const pathname = usePathname();
+
   return (
     <nav aria-label="Navegación principal" className="flex flex-1 flex-col gap-1">
       {NAV_ITEMS.map(({ label, icon: Icon, href }) => {
         if (href) {
+          const active = isActiveSection(href, pathname);
+
           return (
             <Link
               key={label}
               href={href}
-              aria-current="page"
+              aria-current={active ? "page" : undefined}
               onClick={onNavigate}
-              className={navItemActive}
+              className={active ? navItemActive : navItemIdle}
             >
               <Icon className="h-[19px] w-[19px]" />
               {label}

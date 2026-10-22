@@ -189,14 +189,16 @@ test("Feed lleva a la home y las demás acciones no navegan", async ({
     .evaluateAll((anchors) =>
       anchors.map((anchor) => anchor.getAttribute("href")),
     );
-  expect(new Set(hrefs)).toEqual(new Set(["/"]));
+  expect(new Set(hrefs)).toEqual(new Set(["/", "/kids"]));
+
+  await page.getByRole("link", { name: "Niños" }).click();
+  await expect(page).toHaveURL("http://localhost:3000/kids");
 
   await page.getByRole("link", { name: "Feed" }).click();
   await expect(page).toHaveURL(HOME);
 
   const inertButtons = [
     "Nueva publicación",
-    "Niños",
     "Avisos",
     "Mi cuenta",
     "Cerrar sesión",

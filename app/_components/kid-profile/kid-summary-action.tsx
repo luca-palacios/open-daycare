@@ -1,4 +1,4 @@
-import { SunLogo } from "./icons";
+import { SunLogo } from "../ui/icons";
 
 export function KidSummaryAction() {
   return (

@@ -1,4 +1,4 @@
-import { AlertTriangleIcon } from "./icons";
+import { AlertTriangleIcon } from "../ui/icons";
 
 export function KidAllergyAlert({ allergies }: { allergies: string }) {
   return (

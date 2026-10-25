@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CloseIcon, MenuIcon } from "./icons";
+import { CloseIcon, MenuIcon } from "../ui/icons";
 import { Brand, NavMenu, NewPostButton, UserSummary } from "./nav-menu";
 
 export function MobileNav() {

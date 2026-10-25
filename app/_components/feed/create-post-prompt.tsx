@@ -1,5 +1,5 @@
-import { teacher } from "../_data/mock";
-import { CameraIcon } from "./icons";
+import { teacher } from "../../_data/mock";
+import { CameraIcon } from "../ui/icons";
 
 export function CreatePostPrompt() {
   return (

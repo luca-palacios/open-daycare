@@ -1,4 +1,4 @@
-import type { PostKind } from "../_data/mock";
+import type { PostKind } from "../../_data/mock";
 
 const BADGE_STYLES: Record<
   PostKind,

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentType } from "react";
-import { BellIcon, ChildrenIcon, HomeIcon, LogoutIcon, PlusIcon, SunLogo, UserIcon } from "./icons";
-import type { IconProps } from "./icons";
-import { room, teacher } from "../_data/mock";
+import { BellIcon, ChildrenIcon, HomeIcon, LogoutIcon, PlusIcon, SunLogo, UserIcon } from "../ui/icons";
+import type { IconProps } from "../ui/icons";
+import { room, teacher } from "../../_data/mock";
 
 type NavItem = {
   label: string;

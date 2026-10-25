@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { AppShell } from "../_components/app-shell";
-import { KidsDirectory } from "../_components/kids-directory";
-import { KidsHeader } from "../_components/kids-header";
+import { AppShell } from "../_components/layout/app-shell";
+import { KidsDirectory } from "../_components/kids/kids-directory";
+import { KidsHeader } from "../_components/kids/kids-header";
 import { kids } from "../_data/kids";
 import { room } from "../_data/mock";
 

@@ -1,4 +1,4 @@
-import { SearchIcon } from "./icons";
+import { SearchIcon } from "../ui/icons";
 
 export function KidsEmptyState() {
   return (

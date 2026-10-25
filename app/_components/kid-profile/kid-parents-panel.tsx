@@ -1,5 +1,5 @@
-import type { Parent } from "../_data/kids";
-import { PlusIcon } from "./icons";
+import type { Parent } from "../../_data/kids";
+import { PlusIcon } from "../ui/icons";
 
 const PARENT_TONES = ["bg-[#C9B6E8]", "bg-[#A9C7E8]"];
 

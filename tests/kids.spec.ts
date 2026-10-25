@@ -1,9 +1,13 @@
 import { test, expect, type Page } from "@playwright/test";
 import { kids } from "../app/_data/kids";
-import { gotoHydrated } from "./helpers";
+import { gotoHydrated, seedDemoSession } from "./helpers";
 
 const BASE = "http://localhost:3000";
 const KIDS = `${BASE}/kids`;
+
+test.beforeEach(async ({ page }) => {
+  await seedDemoSession(page.context());
+});
 
 const KID_NAMES = kids.map((kid) => kid.name);
 

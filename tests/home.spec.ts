@@ -1,7 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
-import { gotoHydrated } from "./helpers";
+import { BASE_URL, gotoHydrated, seedDemoSession } from "./helpers";
 
 const HOME = "http://localhost:3000/";
+
+test.beforeEach(async ({ page }) => {
+  await seedDemoSession(page.context());
+});
 
 function trackErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -88,6 +92,7 @@ test("formatea las horas en la zona horaria del visitante", async ({
 
   for (const timeZoneId of zones) {
     const context = await browser.newContext({ timezoneId: timeZoneId });
+    await seedDemoSession(context);
     const page = await context.newPage();
     await gotoHydrated(page, HOME);
 
@@ -202,7 +207,6 @@ test("Feed lleva a la home y las demás acciones no navegan", async ({
     "Nueva publicación",
     "Avisos",
     "Mi cuenta",
-    "Cerrar sesión",
     /Compartí un momento/,
     /^Editar$/,
   ];
@@ -216,6 +220,19 @@ test("Feed lleva a la home y las demás acciones no navegan", async ({
       await expect(page).toHaveURL(HOME);
     }
   }
+});
+
+test("Salir cierra la sesión demo y vuelve al login", async ({ page }) => {
+  await gotoHydrated(page, HOME);
+
+  await page.getByRole("button", { name: "Salir" }).click();
+  await expect(page).toHaveURL(`${BASE_URL}/login`);
+
+  await gotoHydrated(page, HOME);
+  await expect(page).toHaveURL(`${BASE_URL}/login`);
+  await expect(
+    page.getByRole("heading", { name: "Iniciar sesión" }),
+  ).toBeVisible();
 });
 
 test("no desborda horizontalmente en 375, 768 y 1280 px", async ({ page }) => {

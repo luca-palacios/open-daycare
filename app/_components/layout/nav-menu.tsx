@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ComponentType } from "react";
 import { BellIcon, ChildrenIcon, HomeIcon, LogoutIcon, PlusIcon, SunLogo, UserIcon } from "../ui/icons";
 import type { IconProps } from "../ui/icons";
 import { room, teacher } from "../../_data/mock";
+import { endDemoSession } from "../../_lib/demo-session";
 
 type NavItem = {
   label: string;
@@ -95,6 +96,14 @@ export function NavMenu({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function UserSummary({ className = "" }: { className?: string }) {
+  const router = useRouter();
+
+  function handleLogout() {
+    endDemoSession();
+    router.replace("/login");
+    router.refresh();
+  }
+
   return (
     <div className={`border-t border-line pt-3.5 ${className}`}>
       <div className="flex items-center gap-[11px] px-2 py-1.5">
@@ -109,9 +118,10 @@ export function UserSummary({ className = "" }: { className?: string }) {
         </span>
         <button
           type="button"
-          title="Cerrar sesión"
-          aria-label="Cerrar sesión"
-          className="flex h-8 w-8 flex-none items-center justify-center rounded-[10px] bg-canvas text-muted"
+          title="Salir"
+          aria-label="Salir"
+          onClick={handleLogout}
+          className="flex h-8 w-8 flex-none items-center justify-center rounded-[10px] bg-canvas text-muted transition-colors hover:text-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auth-focus"
         >
           <LogoutIcon className="h-4 w-4" />
         </button>

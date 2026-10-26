@@ -5,7 +5,6 @@ import { AppShell } from "../_components/layout/app-shell";
 import { KidsDirectory } from "../_components/kids/kids-directory";
 import { KidsHeader } from "../_components/kids/kids-header";
 import { kids } from "../_data/kids";
-import { room } from "../_data/mock";
 
 export const metadata: Metadata = {
   title: "Niños · OpenDayCare",
@@ -13,7 +12,7 @@ export const metadata: Metadata = {
 
 async function KidsContent() {
   await connection();
-  return <KidsDirectory kids={kids} roomName={room.shortName} />;
+  return <KidsDirectory kids={kids} />;
 }
 
 function KidsSkeleton() {

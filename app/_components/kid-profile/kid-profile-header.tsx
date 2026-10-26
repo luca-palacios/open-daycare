@@ -4,18 +4,39 @@ import { KID_AVATAR_TONES } from "../../_lib/avatar-tones";
 import { calculateAgeInYears } from "../../_lib/kid-age";
 import { ChevronLeftIcon } from "../ui/icons";
 
-export function KidProfileHeader({ kid }: { kid: Kid }) {
+type KidProfileHeaderProps = {
+  kid: Kid;
+  onBack?: () => void;
+  showEditButton?: boolean;
+};
+
+export function KidProfileHeader({
+  kid,
+  onBack,
+  showEditButton = true,
+}: KidProfileHeaderProps) {
   const age = calculateAgeInYears(kid.birthDate);
 
   return (
     <header>
-      <Link
-        href="/kids"
-        className="mb-5 flex items-center gap-[7px] text-[14px] font-bold text-muted"
-      >
-        <ChevronLeftIcon aria-hidden="true" className="h-[18px] w-[18px]" />
-        Volver a Niños
-      </Link>
+      {onBack ? (
+        <button
+          type="button"
+          onClick={onBack}
+          className="mb-5 flex items-center gap-[7px] text-[14px] font-bold text-muted"
+        >
+          <ChevronLeftIcon aria-hidden="true" className="h-[18px] w-[18px]" />
+          Volver a Niños
+        </button>
+      ) : (
+        <Link
+          href="/kids"
+          className="mb-5 flex items-center gap-[7px] text-[14px] font-bold text-muted"
+        >
+          <ChevronLeftIcon aria-hidden="true" className="h-[18px] w-[18px]" />
+          Volver a Niños
+        </Link>
+      )}
 
       <div className="flex flex-wrap items-center gap-[18px]">
         <span
@@ -34,12 +55,14 @@ export function KidProfileHeader({ kid }: { kid: Kid }) {
           </p>
         </div>
 
-        <button
-          type="button"
-          className="flex-none rounded-xl border-[1.5px] border-line bg-surface px-4 py-[9px] text-[14px] font-bold text-[#6E6359]"
-        >
-          Editar
-        </button>
+        {showEditButton && (
+          <button
+            type="button"
+            className="flex-none rounded-xl border-[1.5px] border-line bg-surface px-4 py-[9px] text-[14px] font-bold text-[#6E6359]"
+          >
+            Editar
+          </button>
+        )}
       </div>
     </header>
   );

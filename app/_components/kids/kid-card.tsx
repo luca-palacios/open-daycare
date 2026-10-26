@@ -37,16 +37,19 @@ function Badge({ label, tone }: { label: string; tone: string }) {
   );
 }
 
-export function KidCard({ kid }: { kid: Kid }) {
+type KidCardProps = {
+  kid: Kid;
+  onSelect?: () => void;
+};
+
+export function KidCard({ kid, onSelect }: KidCardProps) {
   const age = calculateAgeInYears(kid.birthDate);
   const hasParents = kid.parents.length > 0;
+  const className =
+    "flex min-w-0 cursor-pointer items-center gap-3.5 rounded-[18px] border border-line bg-surface p-4 text-left shadow-[0_4px_14px_-12px_rgba(120,90,60,0.5)] transition hover:-translate-y-0.5 hover:border-[#F2A78E]";
 
-  return (
-    <Link
-      href={`/kids/${kid.id}`}
-      data-testid="kid-card"
-      className="flex min-w-0 items-center gap-3.5 rounded-[18px] border border-line bg-surface p-4 shadow-[0_4px_14px_-12px_rgba(120,90,60,0.5)] transition hover:-translate-y-0.5 hover:border-[#F2A78E]"
-    >
+  const content = (
+    <>
       <span
         aria-hidden="true"
         className={`flex h-12 w-12 flex-none items-center justify-center rounded-full font-display text-[19px] font-semibold ${KID_AVATAR_TONES[kid.avatarTone]}`}
@@ -73,6 +76,26 @@ export function KidCard({ kid }: { kid: Kid }) {
       ) : (
         <Badge label="VINCULAR" tone={PENDING_BADGE} />
       )}
+    </>
+  );
+
+  if (onSelect) {
+    return (
+      <button
+        type="button"
+        data-testid="kid-card"
+        aria-label={`Ver perfil de ${kid.name}`}
+        onClick={onSelect}
+        className={className}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={`/kids/${kid.id}`} data-testid="kid-card" className={className}>
+      {content}
     </Link>
   );
 }

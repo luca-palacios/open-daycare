@@ -71,7 +71,7 @@ export function KidParentsPanel({ parents }: { parents: Parent[] }) {
 
       <button
         type="button"
-        className="mt-3 flex items-center gap-3 pt-2"
+        className="mt-3 flex cursor-pointer items-center gap-3 pt-2"
       >
         <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full border-[1.5px] border-dashed border-[#D8CBBA] text-[#B0A290]">
           <PlusIcon aria-hidden="true" className="h-[18px] w-[18px]" />

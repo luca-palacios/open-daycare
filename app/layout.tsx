@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fredoka, Nunito } from "next/font/google";
+import { TemporaryKidsProvider } from "./_components/kids/temporary-kids-provider";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -28,7 +29,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${nunito.variable} ${fredoka.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <TemporaryKidsProvider>{children}</TemporaryKidsProvider>
+      </body>
     </html>
   );
 }

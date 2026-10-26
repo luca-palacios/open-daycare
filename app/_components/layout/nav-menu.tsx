@@ -7,6 +7,7 @@ import { BellIcon, ChildrenIcon, HomeIcon, LogoutIcon, PlusIcon, SunLogo, UserIc
 import type { IconProps } from "../ui/icons";
 import { room, teacher } from "../../_data/mock";
 import { endDemoSession } from "../../_lib/demo-session";
+import { useTemporaryKids } from "../kids/temporary-kids-provider";
 
 type NavItem = {
   label: string;
@@ -97,8 +98,10 @@ export function NavMenu({ onNavigate }: { onNavigate?: () => void }) {
 
 export function UserSummary({ className = "" }: { className?: string }) {
   const router = useRouter();
+  const { clearTemporaryKids } = useTemporaryKids();
 
   function handleLogout() {
+    clearTemporaryKids();
     endDemoSession();
     router.replace("/auth/login");
     router.refresh();
@@ -121,7 +124,7 @@ export function UserSummary({ className = "" }: { className?: string }) {
           title="Salir"
           aria-label="Salir"
           onClick={handleLogout}
-          className="flex h-8 w-8 flex-none items-center justify-center rounded-[10px] bg-canvas text-muted transition-colors hover:text-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auth-focus"
+          className="flex h-8 w-8 flex-none cursor-pointer items-center justify-center rounded-[10px] bg-canvas text-muted transition-colors hover:text-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auth-focus"
         >
           <LogoutIcon className="h-4 w-4" />
         </button>

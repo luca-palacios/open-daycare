@@ -7,6 +7,7 @@ import { BellIcon, ChildrenIcon, HomeIcon, LogoutIcon, PlusIcon, SunLogo, UserIc
 import type { IconProps } from "../ui/icons";
 import { room, teacher } from "../../_data/mock";
 import { endDemoSession } from "../../_lib/demo-session";
+import { useTemporaryKids } from "../kids/temporary-kids-provider";
 
 type NavItem = {
   label: string;
@@ -97,8 +98,10 @@ export function NavMenu({ onNavigate }: { onNavigate?: () => void }) {
 
 export function UserSummary({ className = "" }: { className?: string }) {
   const router = useRouter();
+  const { clearTemporaryKids } = useTemporaryKids();
 
   function handleLogout() {
+    clearTemporaryKids();
     endDemoSession();
     router.replace("/auth/login");
     router.refresh();

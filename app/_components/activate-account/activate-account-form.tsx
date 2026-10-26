@@ -96,7 +96,7 @@ export function ActivateAccountForm({ invitation }: ActivateAccountFormProps) {
 
       <p className="mt-[22px] text-center text-[14.5px] text-muted">
         ¿Ya tenés cuenta?{" "}
-        <Link href="/login" className="font-extrabold text-brand-dark">
+        <Link href="/auth/login" className="font-extrabold text-brand-dark">
           Iniciar sesión
         </Link>
       </p>

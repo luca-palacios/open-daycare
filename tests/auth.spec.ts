@@ -2,8 +2,8 @@ import { test, expect, type Page } from "@playwright/test";
 import { BASE_URL, gotoHydrated, seedDemoSession } from "./helpers";
 
 const HOME = `${BASE_URL}/`;
-const LOGIN = `${BASE_URL}/login`;
-const ACTIVATE = `${BASE_URL}/activate-account`;
+const LOGIN = `${BASE_URL}/auth/login`;
+const ACTIVATE = `${BASE_URL}/auth/activate-account`;
 const SESSION_COOKIE = "odc-demo-session";
 
 function trackErrors(page: Page): string[] {
@@ -199,6 +199,13 @@ test.describe("protección de rutas", () => {
 
     await gotoHydrated(page, ACTIVATE);
     await expect(page).toHaveURL(HOME);
+  });
+
+  test("las rutas de auth anteriores ya no existen", async ({ page }) => {
+    for (const path of [`${BASE_URL}/login`, `${BASE_URL}/activate-account`]) {
+      const response = await gotoHydrated(page, path);
+      expect(response?.status(), path).toBe(404);
+    }
   });
 });
 

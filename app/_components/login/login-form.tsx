@@ -74,7 +74,7 @@ export function LoginForm() {
 
       <p className="mt-6 text-center text-[14.5px] text-muted">
         ¿Te invitó la guardería?{" "}
-        <Link href="/activate-account" className="font-extrabold text-brand-dark">
+        <Link href="/auth/activate-account" className="font-extrabold text-brand-dark">
           Activá tu cuenta
         </Link>
       </p>

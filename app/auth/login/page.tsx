@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { AuthBrandPanel } from "../_components/login/auth-brand-panel";
-import { LoginForm } from "../_components/login/login-form";
+import { AuthBrandPanel } from "../../_components/login/auth-brand-panel";
+import { LoginForm } from "../../_components/login/login-form";
 
 export const metadata: Metadata = {
   title: "Iniciar sesión · OpenDayCare",

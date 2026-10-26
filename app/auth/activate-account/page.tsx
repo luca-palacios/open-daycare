@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { ActivateAccountForm } from "../_components/activate-account/activate-account-form";
-import { InvitationSummary } from "../_components/activate-account/invitation-summary";
-import { SunLogo } from "../_components/ui/icons";
-import { invitation } from "../_data/invitation";
+import { ActivateAccountForm } from "../../_components/activate-account/activate-account-form";
+import { InvitationSummary } from "../../_components/activate-account/invitation-summary";
+import { SunLogo } from "../../_components/ui/icons";
+import { invitation } from "../../_data/invitation";
 
 export const metadata: Metadata = {
   title: "Activar cuenta · OpenDayCare",

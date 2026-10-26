@@ -100,7 +100,7 @@ export function UserSummary({ className = "" }: { className?: string }) {
 
   function handleLogout() {
     endDemoSession();
-    router.replace("/login");
+    router.replace("/auth/login");
     router.refresh();
   }
 

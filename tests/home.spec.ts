@@ -226,10 +226,10 @@ test("Salir cierra la sesión demo y vuelve al login", async ({ page }) => {
   await gotoHydrated(page, HOME);
 
   await page.getByRole("button", { name: "Salir" }).click();
-  await expect(page).toHaveURL(`${BASE_URL}/login`);
+  await expect(page).toHaveURL(`${BASE_URL}/auth/login`);
 
   await gotoHydrated(page, HOME);
-  await expect(page).toHaveURL(`${BASE_URL}/login`);
+  await expect(page).toHaveURL(`${BASE_URL}/auth/login`);
   await expect(
     page.getByRole("heading", { name: "Iniciar sesión" }),
   ).toBeVisible();

@@ -2,6 +2,7 @@
 
 import { formatFeedDate } from "../../_lib/format-date";
 import { useVisitorTimeZone } from "../../_lib/use-visitor-time-zone";
+import { useTemporaryKids } from "../kids/temporary-kids-provider";
 
 type FeedHeaderProps = {
   eyebrow: string;
@@ -15,7 +16,9 @@ export function FeedHeader({
   childrenCount,
 }: FeedHeaderProps) {
   const timeZone = useVisitorTimeZone();
+  const { temporaryKids } = useTemporaryKids();
   const dateLabel = timeZone ? formatFeedDate(new Date(), timeZone) : "";
+  const totalChildrenCount = childrenCount + temporaryKids.length;
 
   return (
     <header className="mb-6">
@@ -26,7 +29,7 @@ export function FeedHeader({
         Buenas, {teacherName}
       </h1>
       <p className="mt-[5px] min-h-[21px] text-[14.5px] text-muted">
-        {childrenCount} niños
+        {totalChildrenCount} niños
         <span aria-hidden="true"> · </span>
         <span data-testid="feed-date">{dateLabel || "\u00A0"}</span>
       </p>

@@ -12,6 +12,16 @@
   --brand: #e0654a;
   --brand-strong: #d9583c;
   --brand-dark: #c5503a;
+  --auth-canvas: #fbf4ec;
+  --auth-line: #eadfd0;
+  --auth-focus: #f2a78e;
+  --brand-50: #fbe3d8;
+  --brand-100: #f8c3a8;
+  --brand-200: #f6a98e;
+  --brand-300: #f4977e;
+  --brand-400: #f2937a;
+  --brand-500: #ee8164;
+  --brand-600: #ec7e62;
 }
 
 @theme inline {
@@ -26,6 +36,16 @@
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
   --color-brand-dark: var(--brand-dark);
+  --color-auth-canvas: var(--auth-canvas);
+  --color-auth-line: var(--auth-line);
+  --color-auth-focus: var(--auth-focus);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
   --font-sans: var(--font-nunito), system-ui, sans-serif;
   --font-display: var(--font-fredoka), system-ui, sans-serif;
 }

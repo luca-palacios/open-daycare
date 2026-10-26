@@ -1,4 +1,16 @@
-import type { Page, Response } from "@playwright/test";
+import type { BrowserContext, Page, Response } from "@playwright/test";
+
+export const BASE_URL = "http://localhost:3000";
+export const DEMO_SESSION_COOKIE = "odc-demo-session";
+
+/**
+ * Siembra la cookie demo para entrar a las rutas protegidas sin pasar por el login.
+ */
+export async function seedDemoSession(context: BrowserContext): Promise<void> {
+  await context.addCookies([
+    { name: DEMO_SESSION_COOKIE, value: "demo", url: BASE_URL },
+  ]);
+}
 
 /**
  * Navega y espera a que React hidrate.

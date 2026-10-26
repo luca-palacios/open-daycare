@@ -1,5 +1,5 @@
-import type { Kid } from "../_data/kids";
-import { formatKidDate, formatKidMonthYear } from "../_lib/kid-age";
+import type { Kid } from "../../_data/kids";
+import { formatKidDate, formatKidMonthYear } from "../../_lib/kid-age";
 
 export function KidDetails({ kid }: { kid: Kid }) {
   const rows = [

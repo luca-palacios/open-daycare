@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { KID_AVATAR_TONES } from "../_lib/avatar-tones";
-import { calculateAgeInYears } from "../_lib/kid-age";
-import { normalizeText } from "../_lib/normalize-text";
-import type { Kid } from "../_data/kids";
-import { ChevronRightIcon } from "./icons";
+import { KID_AVATAR_TONES } from "../../_lib/avatar-tones";
+import { calculateAgeInYears } from "../../_lib/kid-age";
+import { normalizeText } from "../../_lib/normalize-text";
+import type { Kid } from "../../_data/kids";
+import { ChevronRightIcon } from "../ui/icons";
 
 const ALLERGY_LABELS = [
   { keyword: "mani", label: "MANÍ" },

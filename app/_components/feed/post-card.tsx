@@ -1,5 +1,5 @@
-import type { Post } from "../_data/mock";
-import { CommentIcon, HeartIcon, ImageIcon, MegaphoneIcon } from "./icons";
+import type { Post } from "../../_data/mock";
+import { CommentIcon, HeartIcon, ImageIcon, MegaphoneIcon } from "../ui/icons";
 import { PostKindBadge } from "./post-kind-badge";
 
 type PostCardProps = {

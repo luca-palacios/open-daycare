@@ -1,8 +1,8 @@
 import Link from "next/link";
-import type { Kid } from "../_data/kids";
-import { KID_AVATAR_TONES } from "../_lib/avatar-tones";
-import { calculateAgeInYears } from "../_lib/kid-age";
-import { ChevronLeftIcon } from "./icons";
+import type { Kid } from "../../_data/kids";
+import { KID_AVATAR_TONES } from "../../_lib/avatar-tones";
+import { calculateAgeInYears } from "../../_lib/kid-age";
+import { ChevronLeftIcon } from "../ui/icons";
 
 export function KidProfileHeader({ kid }: { kid: Kid }) {
   const age = calculateAgeInYears(kid.birthDate);

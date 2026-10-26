@@ -76,14 +76,16 @@ Convenciones:
 
 3. Crear `app/_data/mock.ts` con el tipo `Post`, la sala, la maestra y las tres publicaciones. Las horas se construyen a partir de la fecha actual y se serializan en UTC. Verificación: importar el módulo devuelve tres publicaciones en formato ISO.
 
-4. Crear los componentes de presentación en `app/_components/`:
-   - `app-shell.tsx`: contenedor con barra lateral y área principal.
-   - `sidebar.tsx`: logotipo, botón de nueva publicación, navegación y tarjeta de usuario.
-   - `mobile-nav.tsx`: componente cliente con botón que abre y cierra el menú.
-   - `feed-header.tsx`: título, saludo y fecha local.
-   - `create-post-prompt.tsx`: acceso visual a nueva publicación.
-   - `post-card.tsx`: tarjeta con autor, tipo, texto, foto opcional y acciones.
-   - `post-kind-badge.tsx`: insignia de tipo con sus colores.
+4. Crear los componentes de presentación agrupados por alcance en `app/_components/`:
+   - `layout/app-shell.tsx`: contenedor con barra lateral y área principal.
+   - `layout/sidebar.tsx`: logotipo, botón de nueva publicación, navegación y tarjeta de usuario.
+   - `layout/mobile-nav.tsx`: componente cliente con botón que abre y cierra el menú.
+   - `feed/feed-header.tsx`: título, saludo y fecha local.
+   - `feed/create-post-prompt.tsx`: acceso visual a nueva publicación.
+   - `feed/post-feed.tsx`: lista y agrupación de publicaciones por día local.
+   - `feed/post-card.tsx`: tarjeta con autor, tipo, texto, foto opcional y acciones.
+   - `feed/post-kind-badge.tsx`: insignia de tipo con sus colores.
+   - `layout/nav-menu.tsx` y `ui/icons.tsx`: navegación compartida e iconos.
 
    Verificación: cada componente puede renderizarse con datos mock sin dependencias externas.
 

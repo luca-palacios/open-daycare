@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { AppShell } from "./_components/app-shell";
-import { CreatePostPrompt } from "./_components/create-post-prompt";
-import { FeedHeader } from "./_components/feed-header";
-import { PostFeed } from "./_components/post-feed";
+import { AppShell } from "./_components/layout/app-shell";
+import { CreatePostPrompt } from "./_components/feed/create-post-prompt";
+import { FeedHeader } from "./_components/feed/feed-header";
+import { PostFeed } from "./_components/feed/post-feed";
 import { createMockPosts, room, teacher } from "./_data/mock";
 
 async function FeedPosts() {

@@ -1,13 +1,13 @@
 "use client";
 
-import type { Post } from "../_data/mock";
-import { TEACHER_TIME_ZONE } from "../_data/mock";
+import type { Post } from "../../_data/mock";
+import { TEACHER_TIME_ZONE } from "../../_data/mock";
 import {
   formatFeedDate,
   formatPostTime,
   getLocalDayKey,
-} from "../_lib/format-date";
-import { useVisitorTimeZone } from "../_lib/use-visitor-time-zone";
+} from "../../_lib/format-date";
+import { useVisitorTimeZone } from "../../_lib/use-visitor-time-zone";
 import { PostCard } from "./post-card";
 
 type PostGroup = {

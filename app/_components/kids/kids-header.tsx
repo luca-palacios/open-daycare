@@ -1,4 +1,4 @@
-import { PlusIcon } from "./icons";
+import { PlusIcon } from "../ui/icons";
 
 export function KidsHeader() {
   return (

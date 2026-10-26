@@ -1,6 +1,6 @@
 "use client";
 
-import { SearchIcon } from "./icons";
+import { SearchIcon } from "../ui/icons";
 
 type KidsSearchProps = {
   value: string;

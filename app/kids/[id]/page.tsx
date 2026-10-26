@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { AppShell } from "../../_components/app-shell";
-import { KidAllergyAlert } from "../../_components/kid-allergy-alert";
-import { KidDetails } from "../../_components/kid-details";
-import { KidParentsPanel } from "../../_components/kid-parents-panel";
-import { KidProfileHeader } from "../../_components/kid-profile-header";
-import { KidSummaryAction } from "../../_components/kid-summary-action";
+import { AppShell } from "../../_components/layout/app-shell";
+import { KidAllergyAlert } from "../../_components/kid-profile/kid-allergy-alert";
+import { KidDetails } from "../../_components/kid-profile/kid-details";
+import { KidParentsPanel } from "../../_components/kid-profile/kid-parents-panel";
+import { KidProfileHeader } from "../../_components/kid-profile/kid-profile-header";
+import { KidSummaryAction } from "../../_components/kid-profile/kid-summary-action";
 import { getKidById } from "../../_data/kids";
 
 export const instant = false;

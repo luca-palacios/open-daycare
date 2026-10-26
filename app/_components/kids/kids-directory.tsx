@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { Kid } from "../_data/kids";
-import { normalizeText } from "../_lib/normalize-text";
+import type { Kid } from "../../_data/kids";
+import { normalizeText } from "../../_lib/normalize-text";
 import { KidCard } from "./kid-card";
 import { KidsEmptyState } from "./kids-empty-state";
 import { KidsSearch } from "./kids-search";

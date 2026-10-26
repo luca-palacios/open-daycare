@@ -1,7 +1,7 @@
 "use client";
 
-import { formatFeedDate } from "../_lib/format-date";
-import { useVisitorTimeZone } from "../_lib/use-visitor-time-zone";
+import { formatFeedDate } from "../../_lib/format-date";
+import { useVisitorTimeZone } from "../../_lib/use-visitor-time-zone";
 
 type FeedHeaderProps = {
   eyebrow: string;

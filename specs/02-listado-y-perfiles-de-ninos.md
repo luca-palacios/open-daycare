@@ -78,10 +78,10 @@ Convenciones:
 
 1. Crear `app/_data/kids.ts` con los tipos, los ocho registros y helpers de consulta por ID. Verificación: importar el módulo devuelve ocho niños con IDs únicos.
 2. Crear `app/_lib/kid-age.ts` con el cálculo de años completos y el formato de fecha en español. Verificación: dos fechas de nacimiento conocidas devuelven edades distintas antes y después del cumpleaños.
-3. Crear `app/kids/page.tsx` y los componentes del listado en `app/_components/`: encabezado con acción, buscador, tarjeta y estado vacío. Verificación: `/kids` renderiza las ocho tarjetas.
+3. Crear `app/kids/page.tsx` y los componentes del listado en `app/_components/kids/`: `kids-header.tsx`, `kids-search.tsx`, `kid-card.tsx`, `kids-directory.tsx` y `kids-empty-state.tsx`. Verificación: `/kids` renderiza las ocho tarjetas.
 4. Implementar la búsqueda en vivo como componente cliente con conteo de resultados. Verificación: filtrar por nombre parcial reduce las tarjetas y una búsqueda sin coincidencias muestra el estado vacío.
-5. Crear `app/kids/[id]/page.tsx` y los componentes del perfil: cabecera, alerta de alergias, ficha de datos, panel de padres y acción de resumen. Resolver el niño por ID y usar el 404 de Next.js cuando no exista. Verificación: los ocho perfiles cargan y un ID inventado devuelve 404.
-6. Actualizar `app/_components/nav-menu.tsx` para enlazar «Niños» a `/kids` y calcular la sección activa desde la ruta, tanto en escritorio como en móvil. Verificación: el ítem activo cambia entre `/`, `/kids` y `/kids/[id]`.
+5. Crear `app/kids/[id]/page.tsx` y los componentes del perfil en `app/_components/kid-profile/`: `kid-profile-header.tsx`, `kid-allergy-alert.tsx`, `kid-details.tsx`, `kid-parents-panel.tsx` y `kid-summary-action.tsx`. Resolver el niño por ID y usar el 404 de Next.js cuando no exista. Verificación: los ocho perfiles cargan y un ID inventado devuelve 404.
+6. Actualizar `app/_components/layout/nav-menu.tsx` para enlazar «Niños» a `/kids` y calcular la sección activa desde la ruta, tanto en escritorio como en móvil. Verificación: el ítem activo cambia entre `/`, `/kids` y `/kids/[id]`.
 7. Ajustar a ocho el contador mock de la home en `app/_data/mock.ts` y verificar que `/` sigue intacto. Verificación: home y listado muestran ocho.
 8. Añadir `tests/kids.spec.ts` con listado, búsqueda, perfiles, 404, navegación y anchos de 375, 768 y 1280 px. Verificación: `npx playwright test tests/kids.spec.ts --project=chromium` pasa con `npm run dev` activo.
 

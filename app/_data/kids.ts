@@ -12,10 +12,11 @@ export type Kid = {
   name: string;
   birthDate: string; // ISO 8601, solo fecha: YYYY-MM-DD
   joinedAt: string; // ISO 8601, solo fecha: YYYY-MM-DD
-  room: string;
+  room: "Soles" | "Lunas";
   initials: string;
   avatarTone: "sky" | "rose" | "mint" | "sun" | "lilac";
   allergies?: string;
+  medicalNotes?: string;
   parents: Parent[];
 };
 

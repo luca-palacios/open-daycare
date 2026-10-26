@@ -1,9 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
 import { kids } from "../app/_data/kids";
+import { validateKidInput, type KidFormInput } from "../app/_lib/temporary-kid";
 import { gotoHydrated, seedDemoSession } from "./helpers";
 
 const BASE = "http://localhost:3000";
 const KIDS = `${BASE}/kids`;
+const LOGIN = `${BASE}/auth/login`;
 
 test.beforeEach(async ({ page }) => {
   await seedDemoSession(page.context());
@@ -43,6 +45,33 @@ function ageInArgentina(birthDate: string, now: Date = new Date()): number {
   return todayYear - birthYear - (birthdayPassed ? 0 : 1);
 }
 
+type NewKidInput = {
+  name: string;
+  room?: "Soles" | "Lunas";
+  birthDate?: string;
+  allergies?: string;
+  medicalNotes?: string;
+};
+
+async function addTemporaryKid(page: Page, input: NewKidInput): Promise<void> {
+  await page.getByRole("button", { name: "Agregar niño" }).click();
+  await page.getByLabel("Nombre completo").fill(input.name);
+  await page
+    .getByLabel("Fecha de nacimiento")
+    .fill(input.birthDate ?? "2024-01-15");
+  await page.getByLabel("Sala", { exact: true }).selectOption(input.room ?? "Lunas");
+
+  if (input.allergies) {
+    await page.getByLabel(/Alergias/).fill(input.allergies);
+  }
+
+  if (input.medicalNotes) {
+    await page.getByLabel(/Notas médicas/).fill(input.medicalNotes);
+  }
+
+  await page.getByRole("button", { name: "Guardar" }).click();
+}
+
 test("muestra los ocho niños y un contador de ocho", async ({ page }) => {
   await gotoHydrated(page, KIDS);
 
@@ -51,6 +80,7 @@ test("muestra los ocho niños y un contador de ocho", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByTestId("kid-card")).toHaveCount(kids.length);
   await expect(page.getByTestId("kids-count")).toHaveText(`${kids.length} niños`);
+  await expect(page.getByTestId("kids-count-lunas")).toHaveText("0 niños");
 
   for (const kid of kids) {
     const card = page.getByTestId("kid-card").filter({ hasText: kid.name });
@@ -111,6 +141,167 @@ test("cada tarjeta abre el perfil del niño y vuelve al listado", async ({
     await expect(page).toHaveURL(KIDS);
     await expect(page.getByTestId("kid-card")).toHaveCount(kids.length);
   }
+});
+
+test("el modal abre sin cambiar la URL, ignora el fondo y cierra con Cancelar o Esc", async ({
+  page,
+}) => {
+  await gotoHydrated(page, KIDS);
+
+  const addButton = page.getByRole("button", { name: "Agregar niño" });
+  await addButton.hover();
+  await expect(addButton).toHaveCSS("cursor", "pointer");
+  await addButton.click();
+
+  const dialog = page.getByRole("dialog", { name: "Agregar niño" });
+  await expect(page).toHaveURL(KIDS);
+  await expect(dialog).toBeVisible();
+  await expect(page.getByLabel("Nombre completo")).toBeFocused();
+
+  await page.mouse.click(1, 1);
+  await expect(dialog).toBeVisible();
+
+  await page.getByRole("button", { name: "Cancelar" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(addButton).toBeFocused();
+
+  await addButton.click();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(addButton).toBeFocused();
+});
+
+test("un formulario vacío anuncia errores y enfoca el primer campo inválido", async ({
+  page,
+}) => {
+  await gotoHydrated(page, KIDS);
+  await page.getByRole("button", { name: "Agregar niño" }).click();
+  await page.getByRole("button", { name: "Guardar" }).click();
+
+  const name = page.getByLabel("Nombre completo");
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(name).toBeFocused();
+  await expect(name).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByRole("dialog").getByRole("alert")).toHaveCount(3);
+  await expect(page.getByText("Ingresá el nombre del niño.")).toBeVisible();
+  await expect(page.getByText("Ingresá la fecha de nacimiento.")).toBeVisible();
+  await expect(page.getByText("Seleccioná una sala.")).toBeVisible();
+});
+
+test("rechaza fechas imposibles y futuras", async ({ page }) => {
+  const validInput: KidFormInput = {
+    name: "Valeria Luna",
+    birthDate: "2024-02-29",
+    room: "Lunas",
+    allergies: "",
+    medicalNotes: "",
+  };
+  const fixedNow = new Date("2026-10-25T15:00:00.000Z");
+
+  expect(
+    validateKidInput({ ...validInput, birthDate: "2024-02-30" }, fixedNow)
+      .birthDate,
+  ).toBe("Ingresá una fecha válida.");
+  expect(
+    validateKidInput({ ...validInput, birthDate: "2026-10-26" }, fixedNow)
+      .birthDate,
+  ).toBe("La fecha no puede ser posterior a hoy.");
+
+  await gotoHydrated(page, KIDS);
+  await page.getByRole("button", { name: "Agregar niño" }).click();
+  await page.getByLabel("Nombre completo").fill(validInput.name);
+  await page.getByLabel("Fecha de nacimiento").fill("2099-12-31");
+  await page.getByLabel("Sala", { exact: true }).selectOption(validInput.room);
+  await page.getByRole("button", { name: "Guardar" }).click();
+
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(
+    page.getByText("La fecha no puede ser posterior a hoy."),
+  ).toBeVisible();
+  await expect(page.getByLabel("Fecha de nacimiento")).toBeFocused();
+});
+
+test("agrega a Lunas, busca en ambas salas, muestra el perfil temporal y actualiza el feed", async ({
+  page,
+}) => {
+  await gotoHydrated(page, KIDS);
+  await addTemporaryKid(page, {
+    name: "Valeria Luna",
+    room: "Lunas",
+    allergies: "Maní, , Lactosa ",
+    medicalNotes: "Usa inhalador después del almuerzo.",
+  });
+
+  await expect(page.getByTestId("kids-count")).toHaveText("8 niños");
+  await expect(page.getByTestId("kids-count-lunas")).toHaveText("1 niño");
+
+  const search = page.getByRole("searchbox", { name: "Buscar niño" });
+  await search.fill("valeria luna");
+  await expect(page.getByTestId("kid-card")).toHaveCount(1);
+  await expect(page.getByTestId("kid-card")).toContainText("Valeria Luna");
+  await search.fill("");
+
+  await page
+    .getByRole("button", { name: "Ver perfil de Valeria Luna" })
+    .click();
+  await expect(page).toHaveURL(KIDS);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Valeria Luna" }),
+  ).toBeVisible();
+  await expect(page.getByText("Maní, Lactosa", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Usa inhalador después del almuerzo.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Editar" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Resumen del día" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Padres vinculados" }),
+  ).toBeVisible();
+  await expect(page.getByText("Sin padres vinculados")).toBeVisible();
+
+  await page.getByRole("button", { name: "Volver a Niños" }).click();
+  await page.getByRole("link", { name: "Feed", exact: true }).click();
+  await expect(page).toHaveURL(`${BASE}/`);
+  await expect(page.getByText(/9 niños\s*·/)).toBeVisible();
+});
+
+test("recargar descarta las altas y restaura los contadores mock", async ({
+  page,
+}) => {
+  await gotoHydrated(page, KIDS);
+  await addTemporaryKid(page, { name: "Valeria Luna", room: "Lunas" });
+  await expect(page.getByTestId("kids-count-lunas")).toHaveText("1 niño");
+
+  await page.reload();
+  await page.waitForLoadState("networkidle");
+
+  await expect(page.getByTestId("kids-count")).toHaveText("8 niños");
+  await expect(page.getByTestId("kids-count-lunas")).toHaveText("0 niños");
+  await expect(page.getByTestId("kid-card")).toHaveCount(kids.length);
+  await page.getByRole("link", { name: "Feed", exact: true }).click();
+  await expect(page.getByText(/8 niños\s*·/)).toBeVisible();
+});
+
+test("Salir elimina las altas temporales antes de volver a iniciar sesión", async ({
+  page,
+}) => {
+  await gotoHydrated(page, KIDS);
+  await addTemporaryKid(page, { name: "Valeria Luna", room: "Lunas" });
+  const logoutButton = page.getByRole("button", { name: "Salir" });
+  await logoutButton.hover();
+  await expect(logoutButton).toHaveCSS("cursor", "pointer");
+  await logoutButton.click();
+  await expect(page).toHaveURL(LOGIN);
+
+  await page.getByLabel("EMAIL").fill("lucia.fernandez@gmail.com");
+  await page.getByLabel("CONTRASEÑA").fill("secreta");
+  await page.getByRole("button", { name: "Iniciar sesión" }).click();
+  await expect(page).toHaveURL(`${BASE}/`);
+  await expect(page.getByText(/8 niños\s*·/)).toBeVisible();
+
+  await page.getByRole("link", { name: "Niños", exact: true }).click();
+  await expect(page.getByTestId("kids-count")).toHaveText("8 niños");
+  await expect(page.getByTestId("kids-count-lunas")).toHaveText("0 niños");
 });
 
 test("Mateo muestra su alerta y sus dos padres con estados", async ({
@@ -200,14 +391,39 @@ test.describe("menú móvil", () => {
 
 test("las acciones fuera de alcance no navegan", async ({ page }) => {
   await gotoHydrated(page, KIDS);
-  await page.getByRole("button", { name: "Agregar niño" }).click();
-  await expect(page).toHaveURL(KIDS);
-
   await gotoHydrated(page, `${KIDS}/mateo-fernandez`);
 
   for (const name of ["Editar", "Resumen del día", "Vincular otro padre"]) {
     await page.getByRole("button", { name }).click();
     await expect(page).toHaveURL(`${KIDS}/mateo-fernandez`);
+  }
+});
+
+test("el modal no desborda horizontalmente en 375, 768 ni 1280 px", async ({
+  page,
+}) => {
+  for (const width of [375, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await gotoHydrated(page, KIDS);
+    await page.getByRole("button", { name: "Agregar niño" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+
+    const bounds = await dialog.boundingBox();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    );
+
+    expect(bounds, `modal visible a ${width}px`).not.toBeNull();
+    expect(bounds?.x, `margen izquierdo a ${width}px`).toBeGreaterThanOrEqual(0);
+    expect(
+      (bounds?.x ?? 0) + (bounds?.width ?? 0),
+      `margen derecho a ${width}px`,
+    ).toBeLessThanOrEqual(width);
+    expect(overflow, `overflow a ${width}px`).toBeLessThanOrEqual(0);
+
+    await page.getByRole("button", { name: "Cancelar" }).click();
   }
 });
 

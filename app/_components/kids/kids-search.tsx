@@ -23,7 +23,7 @@ export function KidsSearch({ value, onChange }: KidsSearchProps) {
         placeholder="Buscar niño…"
         autoComplete="off"
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onInput={(event) => onChange(event.currentTarget.value)}
         className="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-[#B6A99B]"
       />
     </div>

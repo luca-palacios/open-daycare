@@ -23,7 +23,7 @@ export function KidProfileHeader({
         <button
           type="button"
           onClick={onBack}
-          className="mb-5 flex items-center gap-[7px] text-[14px] font-bold text-muted"
+          className="mb-5 flex cursor-pointer items-center gap-[7px] text-[14px] font-bold text-muted"
         >
           <ChevronLeftIcon aria-hidden="true" className="h-[18px] w-[18px]" />
           Volver a Niños
@@ -58,7 +58,7 @@ export function KidProfileHeader({
         {showEditButton && (
           <button
             type="button"
-            className="flex-none rounded-xl border-[1.5px] border-line bg-surface px-4 py-[9px] text-[14px] font-bold text-[#6E6359]"
+            className="flex-none cursor-pointer rounded-xl border-[1.5px] border-line bg-surface px-4 py-[9px] text-[14px] font-bold text-[#6E6359]"
           >
             Editar
           </button>

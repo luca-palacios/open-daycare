@@ -46,7 +46,7 @@ export function KidCard({ kid, onSelect }: KidCardProps) {
   const age = calculateAgeInYears(kid.birthDate);
   const hasParents = kid.parents.length > 0;
   const className =
-    "flex min-w-0 items-center gap-3.5 rounded-[18px] border border-line bg-surface p-4 text-left shadow-[0_4px_14px_-12px_rgba(120,90,60,0.5)] transition hover:-translate-y-0.5 hover:border-[#F2A78E]";
+    "flex min-w-0 cursor-pointer items-center gap-3.5 rounded-[18px] border border-line bg-surface p-4 text-left shadow-[0_4px_14px_-12px_rgba(120,90,60,0.5)] transition hover:-translate-y-0.5 hover:border-[#F2A78E]";
 
   const content = (
     <>

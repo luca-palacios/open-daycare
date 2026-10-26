@@ -96,7 +96,7 @@ export function AddKidModal({
             <button
               type="button"
               onClick={onClose}
-              className="text-left text-[14px] font-bold text-[#94887B] focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:text-[15px]"
+              className="cursor-pointer text-left text-[14px] font-bold text-[#94887B] focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:text-[15px]"
             >
               Cancelar
             </button>
@@ -108,7 +108,7 @@ export function AddKidModal({
             </h2>
             <button
               type="submit"
-              className="text-right text-[14px] font-extrabold text-[#D9583C] focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:text-[15px]"
+              className="cursor-pointer text-right text-[14px] font-extrabold text-[#D9583C] focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:text-[15px]"
             >
               Guardar
             </button>

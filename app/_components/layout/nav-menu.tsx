@@ -8,6 +8,7 @@ import type { IconProps } from "../ui/icons";
 import { room, teacher } from "../../_data/mock";
 import { endDemoSession } from "../../_lib/demo-session";
 import { useTemporaryKids } from "../kids/temporary-kids-provider";
+import { useParentInvitations } from "../kid-profile/parent-invitations-provider";
 
 type NavItem = {
   label: string;
@@ -99,9 +100,11 @@ export function NavMenu({ onNavigate }: { onNavigate?: () => void }) {
 export function UserSummary({ className = "" }: { className?: string }) {
   const router = useRouter();
   const { clearTemporaryKids } = useTemporaryKids();
+  const { clearParentInvitations } = useParentInvitations();
 
   function handleLogout() {
     clearTemporaryKids();
+    clearParentInvitations();
     endDemoSession();
     router.replace("/auth/login");
     router.refresh();

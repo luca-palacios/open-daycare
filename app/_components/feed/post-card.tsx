@@ -55,6 +55,24 @@ export function PostCard({ post, timeLabel }: PostCardProps) {
         </div>
       )}
 
+      {post.images && post.images.length > 0 && (
+        <div
+          className={`mt-3.5 grid gap-2 ${
+            post.images.length === 1 ? "grid-cols-1" : "grid-cols-2"
+          }`}
+        >
+          {post.images.map((image) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={image.src}
+              src={image.src}
+              alt={image.alt}
+              className="h-[180px] w-full rounded-2xl border border-line object-cover sm:h-[200px]"
+            />
+          ))}
+        </div>
+      )}
+
       <footer className="mt-4 flex items-center gap-[18px] border-t border-line-soft pt-3.5">
         <span
           aria-label={`${post.reactions} reacciones`}

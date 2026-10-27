@@ -9,6 +9,7 @@ import {
 } from "../../_lib/format-date";
 import { useVisitorTimeZone } from "../../_lib/use-visitor-time-zone";
 import { PostCard } from "./post-card";
+import { useTemporaryPosts } from "./temporary-posts-provider";
 
 type PostGroup = {
   key: string;
@@ -41,7 +42,11 @@ function groupByLocalDay(posts: Post[], timeZone?: string): PostGroup[] {
 export function PostFeed({ posts }: { posts: Post[] }) {
   // Fallback determinista para SSR y primera hidratación; luego manda la zona del visitante.
   const timeZone = useVisitorTimeZone() || TEACHER_TIME_ZONE;
-  const groups = groupByLocalDay(posts, timeZone);
+  const { temporaryPosts } = useTemporaryPosts();
+  const groups = groupByLocalDay(
+    [...temporaryPosts, ...posts],
+    timeZone,
+  );
 
   return (
     <div className="flex flex-col gap-6">

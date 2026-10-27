@@ -1,6 +1,6 @@
 # SPEC 01 — Feed de inicio
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** Ninguna
 > **Date:** 2026-10-21
 > **Objective:** Reproducir `references/ui/feed.dc.html` en `/` con datos de prueba, fechas mostradas en la zona horaria del visitante y diseño adaptable, sin autenticación ni backend.

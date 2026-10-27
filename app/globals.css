@@ -67,6 +67,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.parent-invitation-dialog::backdrop {
+  background: rgb(63 54 46 / 45%);
+}
+
 a {
   text-decoration: none;
   color: inherit;

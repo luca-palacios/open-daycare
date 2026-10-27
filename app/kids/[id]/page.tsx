@@ -44,7 +44,12 @@ export default async function KidProfilePage({
 
           <div className="flex w-full flex-col gap-3.5 sm:w-[300px] sm:flex-none">
             <KidSummaryAction />
-            <KidParentsPanel parents={kid.parents} />
+            <KidParentsPanel
+              kidId={kid.id}
+              kidName={kid.name}
+              parents={kid.parents}
+              canInviteParents
+            />
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 # SPEC 03 — Login, activación y sesión demo
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 01, SPEC 02
 > **Date:** 2026-10-22
 > **Updated:** 2026-10-25
@@ -197,25 +197,25 @@ app/_components/
 
 ## Acceptance criteria
 
-- [ ] `/auth/login` reproduce la composición de dos columnas de la referencia y no muestra el selector «Personal/Familia».
-- [ ] `/auth/activate-account` reproduce la tarjeta centrada con Mateo, Sala Soles y el código `7K4P9`.
-- [ ] Un email sin formato válido o una contraseña vacía bloquean el envío en ambas páginas y muestran un error asociado al campo.
-- [ ] En `/auth/login`, email válido y contraseña no vacía crean la sesión demo y navegan a `/`.
-- [ ] En `/auth/activate-account`, un código distinto de `7K4P9` bloquea la activación y muestra un error.
-- [ ] En `/auth/activate-account`, código `7K4P9`, email válido y contraseña no vacía crean la sesión demo y navegan a `/`.
-- [ ] La autorización de fotos aparece desmarcada, se puede marcar y no impide activar la cuenta.
-- [ ] Sin sesión demo, `/`, `/kids` y `/kids/[id]` redirigen a `/auth/login`.
-- [ ] Con sesión demo, `/auth/login` y `/auth/activate-account` redirigen a `/`.
-- [ ] «Activá tu cuenta» lleva a `/auth/activate-account` y «Iniciar sesión» lleva a `/auth/login`.
-- [ ] «¿Olvidaste tu contraseña?» no navega ni modifica la URL.
-- [ ] La acción «Salir» aparece en escritorio y móvil, borra la cookie demo y navega a `/auth/login`.
-- [ ] Después de «Salir», volver a `/` redirige a `/auth/login`.
-- [ ] La cookie demo no contiene email, credenciales ni datos personales.
-- [ ] `app/_components/` respeta la tabla de alcance: solo hay subcarpetas y ningún componente exclusivo de una página queda en una carpeta global.
-- [ ] Los errores se anuncian con `role="alert"` y el foco visible se conserva en ambos formularios.
-- [ ] No hay desbordamiento horizontal a 375, 768 ni 1280 px.
-- [ ] No hay errores de hidratación ni de consola en ninguna ruta.
-- [ ] Pasan `tests/auth.spec.ts`, `tests/home.spec.ts`, `tests/kids.spec.ts`, `npm run lint`, `npx tsc --noEmit` y `npm run build`.
+- [x] `/auth/login` reproduce la composición de dos columnas de la referencia y no muestra el selector «Personal/Familia».
+- [x] `/auth/activate-account` reproduce la tarjeta centrada con Mateo, Sala Soles y el código `7K4P9`.
+- [x] Un email sin formato válido o una contraseña vacía bloquean el envío en ambas páginas y muestran un error asociado al campo.
+- [x] En `/auth/login`, email válido y contraseña no vacía crean la sesión demo y navegan a `/`.
+- [x] En `/auth/activate-account`, un código distinto de `7K4P9` bloquea la activación y muestra un error.
+- [x] En `/auth/activate-account`, código `7K4P9`, email válido y contraseña no vacía crean la sesión demo y navegan a `/`.
+- [x] La autorización de fotos aparece desmarcada, se puede marcar y no impide activar la cuenta.
+- [x] Sin sesión demo, `/`, `/kids` y `/kids/[id]` redirigen a `/auth/login`.
+- [x] Con sesión demo, `/auth/login` y `/auth/activate-account` redirigen a `/`.
+- [x] «Activá tu cuenta» lleva a `/auth/activate-account` y «Iniciar sesión» lleva a `/auth/login`.
+- [x] «¿Olvidaste tu contraseña?» no navega ni modifica la URL.
+- [x] La acción «Salir» aparece en escritorio y móvil, borra la cookie demo y navega a `/auth/login`.
+- [x] Después de «Salir», volver a `/` redirige a `/auth/login`.
+- [x] La cookie demo no contiene email, credenciales ni datos personales.
+- [x] `app/_components/` respeta la tabla de alcance: solo hay subcarpetas y ningún componente exclusivo de una página queda en una carpeta global.
+- [x] Los errores se anuncian con `role="alert"` y el foco visible se conserva en ambos formularios.
+- [x] No hay desbordamiento horizontal a 375, 768 ni 1280 px.
+- [x] No hay errores de hidratación ni de consola en ninguna ruta.
+- [x] Pasan `tests/auth.spec.ts`, `tests/home.spec.ts`, `tests/kids.spec.ts`, `npm run lint`, `npx tsc --noEmit` y `npm run build`.
 
 ---
 
@@ -241,16 +241,16 @@ app/_components/
 
 ## Risks
 
-| Risk                                                                   | Mitigation                                                                                                  |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| El usuario cree que la cuenta quedó activada o protegida de verdad     | La cookie no guarda datos y la spec documenta que es una demostración sin seguridad real.                   |
-| La cookie escrita por el cliente no coincide con la que lee `proxy.ts` | Centralizar nombre y valor en `app/_lib/demo-session.ts` y usar las mismas constantes.                      |
+| Risk                                                                   | Mitigation                                                                                                       |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| El usuario cree que la cuenta quedó activada o protegida de verdad     | La cookie no guarda datos y la spec documenta que es una demostración sin seguridad real.                        |
+| La cookie escrita por el cliente no coincide con la que lee `proxy.ts` | Centralizar nombre y valor en `app/_lib/demo-session.ts` y usar las mismas constantes.                           |
 | Bucles de redirección entre login y rutas protegidas                   | `proxy.ts` solo redirige a `/auth/login` las rutas protegidas y solo sale de las de auth si la cookie es válida. |
-| Valores precargados provocan desajustes de hidratación                 | Inicializar el estado del cliente con las mismas constantes que el servidor.                                |
-| Errores de validación no se perciben con lector de pantalla            | Asociar cada mensaje con `aria-describedby` y anunciarlo con `role="alert"`.                                |
-| El panel de marca rompe el layout en pantallas pequeñas                | Ocultarlo por CSS por debajo del punto de corte y dejar solo el formulario.                                 |
-| Las pruebas existentes fallan al proteger las rutas                    | Sembrar la cookie demo desde `tests/helpers.ts` y usarla en las suites de feed y niños.                     |
-| Mover componentes rompe importaciones                                  | Hacer el movimiento en un solo paso y verificar con `npx tsc --noEmit` y `npm run build`.                   |
+| Valores precargados provocan desajustes de hidratación                 | Inicializar el estado del cliente con las mismas constantes que el servidor.                                     |
+| Errores de validación no se perciben con lector de pantalla            | Asociar cada mensaje con `aria-describedby` y anunciarlo con `role="alert"`.                                     |
+| El panel de marca rompe el layout en pantallas pequeñas                | Ocultarlo por CSS por debajo del punto de corte y dejar solo el formulario.                                      |
+| Las pruebas existentes fallan al proteger las rutas                    | Sembrar la cookie demo desde `tests/helpers.ts` y usarla en las suites de feed y niños.                          |
+| Mover componentes rompe importaciones                                  | Hacer el movimiento en un solo paso y verificar con `npx tsc --noEmit` y `npm run build`.                        |
 
 ---
 

@@ -1,6 +1,6 @@
 # SPEC 02 — Listado y perfiles de niños
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 01
 > **Date:** 2026-10-22
 > **Objective:** Incorporar `/kids` y `/kids/[id]` con datos mock y el diseño de `references/ui/ninos.dc.html` y `references/ui/perfil-nino.dc.html`, reutilizando la interfaz existente.

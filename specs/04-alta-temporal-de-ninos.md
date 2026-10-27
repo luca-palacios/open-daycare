@@ -1,6 +1,6 @@
 # SPEC 04 — Alta temporal de niños
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 02, SPEC 03
 > **Date:** 2026-10-25
 > **Objective:** Permitir agregar niños desde un modal en `/kids`, mostrarlos temporalmente en el listado y reflejar su alta en el contador del feed.
@@ -47,16 +47,16 @@ Los registros nuevos y sus notas permanecen únicamente en memoria mientras se n
 
 ## Acceptance criteria
 
-- [ ] El botón abre el modal en `/kids` sin cambiar la URL; «Cancelar» y Esc lo cierran, pero pulsar el fondo no.
-- [ ] Un formulario inválido no se cierra, anuncia errores por campo y enfoca el primero.
-- [ ] Una fecha imposible o futura no permite guardar.
-- [ ] Un alta válida aparece en la sala elegida, entra en la búsqueda y actualiza su contador.
-- [ ] El contador general del feed incluye el alta, incluso si pertenece a Lunas.
-- [ ] La tarjeta nueva abre en `/kids` un perfil que muestra alergias y notas médicas cuando existen.
-- [ ] Recargar o cerrar sesión elimina el alta y restaura los contadores mock.
-- [ ] Los ocho perfiles existentes y el HTTP 404 de un ID desconocido siguen funcionando.
-- [ ] El modal no desborda horizontalmente a 375, 768 ni 1280 px.
-- [ ] Pasan las pruebas, `npm run lint`, `npx tsc --noEmit` y `npm run build`.
+- [x] El botón abre el modal en `/kids` sin cambiar la URL; «Cancelar» y Esc lo cierran, pero pulsar el fondo no.
+- [x] Un formulario inválido no se cierra, anuncia errores por campo y enfoca el primero.
+- [x] Una fecha imposible o futura no permite guardar.
+- [x] Un alta válida aparece en la sala elegida, entra en la búsqueda y actualiza su contador.
+- [x] El contador general del feed incluye el alta, incluso si pertenece a Lunas.
+- [x] La tarjeta nueva abre en `/kids` un perfil que muestra alergias y notas médicas cuando existen.
+- [x] Recargar o cerrar sesión elimina el alta y restaura los contadores mock.
+- [x] Los ocho perfiles existentes y el HTTP 404 de un ID desconocido siguen funcionando.
+- [x] El modal no desborda horizontalmente a 375, 768 ni 1280 px.
+- [x] Pasan las pruebas, `npm run lint`, `npx tsc --noEmit` y `npm run build`.
 
 ---
 

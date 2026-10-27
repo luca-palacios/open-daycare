@@ -44,7 +44,12 @@ export function TemporaryKidProfile({
 
         <div className="flex w-full flex-col gap-3.5 sm:w-[300px] sm:flex-none">
           <KidSummaryAction />
-          <KidParentsPanel parents={kid.parents} />
+          <KidParentsPanel
+            kidId={kid.id}
+            kidName={kid.name}
+            parents={kid.parents}
+            canInviteParents={false}
+          />
         </div>
       </div>
     </div>

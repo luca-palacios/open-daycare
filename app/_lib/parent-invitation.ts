@@ -69,6 +69,7 @@ export function validateParentInvitation(
 
 export function createParentInvitation(
   input: ParentInvitationInput,
+  code: string = generateParentInvitationCode(),
 ): TemporaryParentInvitation {
   return {
     id: globalThis.crypto.randomUUID(),
@@ -77,6 +78,6 @@ export function createParentInvitation(
     email: normalizeEmail(input.email),
     relationship: input.relationship,
     status: "pending",
-    code: generateParentInvitationCode(),
+    code,
   };
 }

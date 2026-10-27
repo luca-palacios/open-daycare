@@ -1,7 +1,14 @@
 import { getLocalDayKey } from "../_lib/format-date";
 import { kids } from "./kids";
 
-export type PostKind = "achievement" | "activity" | "announcement";
+export type PostKind =
+  | "meal"
+  | "nap"
+  | "activity"
+  | "achievement"
+  | "mood"
+  | "photo"
+  | "announcement";
 
 export type Post = {
   id: string;

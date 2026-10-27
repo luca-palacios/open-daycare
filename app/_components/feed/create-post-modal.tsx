@@ -517,7 +517,10 @@ export function CreatePostModal({
                     }
                     className="flex h-24 w-24 flex-none cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[14px] border-[1.5px] border-dashed border-[#DBCDBA] bg-[#F4ECE1] text-[#B0A290] transition-colors hover:bg-[#EFE3D3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark"
                   >
-                    <PlusIcon className="h-[22px] w-[22px] text-[#C5503A]" />
+                    <PlusIcon
+                      aria-hidden="true"
+                      className="h-[22px] w-[22px] text-[#C5503A]"
+                    />
                     <span className="text-xs">Agregar</span>
                   </button>
                 )}
@@ -535,7 +538,7 @@ export function CreatePostModal({
 
               {images.length === 0 && !imageError && (
                 <p className="mt-2 flex items-center gap-1.5 text-[12.5px] text-faint">
-                  <ImageIcon className="h-4 w-4" />
+                  <ImageIcon aria-hidden="true" className="h-4 w-4" />
                   JPG, PNG o WebP · hasta 5 MB por foto
                 </p>
               )}

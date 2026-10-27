@@ -10,6 +10,7 @@ import { endDemoSession } from "../../_lib/demo-session";
 import { useTemporaryKids } from "../kids/temporary-kids-provider";
 import { useParentInvitations } from "../kid-profile/parent-invitations-provider";
 import { CreatePostModal } from "../feed/create-post-modal";
+import { useTemporaryPosts } from "../feed/temporary-posts-provider";
 
 type NavItem = {
   label: string;
@@ -139,10 +140,12 @@ export function UserSummary({ className = "" }: { className?: string }) {
   const router = useRouter();
   const { clearTemporaryKids } = useTemporaryKids();
   const { clearParentInvitations } = useParentInvitations();
+  const { clearTemporaryPosts } = useTemporaryPosts();
 
   function handleLogout() {
     clearTemporaryKids();
     clearParentInvitations();
+    clearTemporaryPosts();
     endDemoSession();
     router.replace("/auth/login");
     router.refresh();

@@ -18,6 +18,37 @@ function trackErrors(page: Page): string[] {
   return errors;
 }
 
+const PNG_1X1 = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+);
+
+function pngFile(name: string) {
+  return { name, mimeType: "image/png", buffer: PNG_1X1 };
+}
+
+async function openCreatePost(page: Page) {
+  await page
+    .getByRole("button", { name: "Nueva publicación" })
+    .first()
+    .click();
+  const dialog = page.getByRole("dialog", { name: "Nueva publicación" });
+  await expect(dialog).toBeVisible();
+  return dialog;
+}
+
+async function addTemporaryKid(
+  page: Page,
+  input: { name: string; room: "Soles" | "Lunas" },
+): Promise<void> {
+  await page.getByRole("button", { name: "Agregar niño" }).click();
+  await page.getByLabel("Nombre completo").fill(input.name);
+  await page.getByLabel("Fecha de nacimiento").fill("2024-01-15");
+  await page.getByLabel("Sala", { exact: true }).selectOption(input.room);
+  await page.getByRole("button", { name: "Guardar" }).click();
+  await expect(page.getByRole("dialog", { name: "Agregar niño" })).toHaveCount(0);
+}
+
 test("muestra las tres publicaciones de la referencia", async ({ page }) => {
   await gotoHydrated(page, HOME);
 
@@ -183,6 +214,32 @@ test.describe("menú móvil", () => {
     await expect(panel).toBeHidden();
     await expect(button).toBeFocused();
   });
+
+  test("abre la publicación desde el menú y al cancelar lo reabre con el foco", async ({
+    page,
+  }) => {
+    await gotoHydrated(page, HOME);
+
+    const toggle = page.locator("button[aria-controls='mobile-nav']");
+    const panel = page.locator("#mobile-nav");
+
+    await toggle.click();
+    await expect(panel).toBeVisible();
+    await panel.getByRole("button", { name: "Nueva publicación" }).click();
+
+    const dialog = page.getByRole("dialog", { name: "Nueva publicación" });
+    await expect(dialog).toBeVisible();
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await expect(panel).toBeHidden();
+
+    await dialog.getByRole("button", { name: "Cancelar" }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(panel).toBeVisible();
+    await expect(
+      panel.getByRole("button", { name: "Nueva publicación" }),
+    ).toBeFocused();
+  });
 });
 
 test("Feed lleva a la home y las demás acciones no navegan", async ({
@@ -204,7 +261,6 @@ test("Feed lleva a la home y las demás acciones no navegan", async ({
   await expect(page).toHaveURL(HOME);
 
   const inertButtons = [
-    "Nueva publicación",
     "Avisos",
     "Mi cuenta",
     /Compartí un momento/,
@@ -255,4 +311,308 @@ test("no registra errores de consola ni de hidratación", async ({ page }) => {
   await page.waitForTimeout(500);
 
   expect(errors).toEqual([]);
+});
+
+test("«Nueva publicación» abre un formulario vacío y «Compartí un momento…» no lo abre", async ({
+  page,
+}) => {
+  await gotoHydrated(page, HOME);
+
+  await page.getByRole("button", { name: /Compartí un momento/ }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Nueva publicación" }),
+  ).toHaveCount(0);
+  await expect(page).toHaveURL(HOME);
+
+  const dialog = await openCreatePost(page);
+  await expect(page).toHaveURL(HOME);
+  await expect(dialog.getByLabel("Descripción")).toHaveValue("");
+  await expect(dialog.getByRole("button", { name: "Mateo" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(dialog.getByRole("button", { name: "Logro" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(dialog.locator("img")).toHaveCount(0);
+
+  await dialog.getByRole("button", { name: "Publicar" }).click();
+  await expect(dialog.getByRole("alert")).toHaveCount(3);
+  await expect(
+    dialog.getByText("Elegí al menos un destinatario."),
+  ).toBeVisible();
+  await expect(dialog.getByText("Elegí un tipo de publicación.")).toBeVisible();
+  await expect(dialog.getByText("Escribí una descripción.")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Mateo" })).toBeFocused();
+});
+
+test("incluye los niños temporales de Soles, no los de Lunas y excluye sala y niños", async ({
+  page,
+}) => {
+  await gotoHydrated(page, `${BASE_URL}/kids`);
+  await addTemporaryKid(page, { name: "Mica Soles", room: "Soles" });
+  await addTemporaryKid(page, { name: "Tere Lunas", room: "Lunas" });
+
+  const dialog = await openCreatePost(page);
+  await expect(dialog.getByRole("button", { name: "Mica" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Mateo" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Tere" })).toHaveCount(0);
+
+  await dialog.getByRole("button", { name: "Mateo" }).click();
+  await dialog.getByRole("button", { name: "Sofía" }).click();
+  await expect(dialog.getByRole("button", { name: "Mateo" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(dialog.getByRole("button", { name: "Sofía" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(
+    dialog.getByRole("button", { name: "Toda la sala" }),
+  ).toHaveAttribute("aria-pressed", "false");
+
+  await dialog.getByRole("button", { name: "Toda la sala" }).click();
+  await expect(
+    dialog.getByRole("button", { name: "Toda la sala" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(dialog.getByRole("button", { name: "Mateo" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(dialog.getByRole("button", { name: "Sofía" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+
+  await dialog.getByRole("button", { name: "Mateo" }).click();
+  await expect(dialog.getByRole("button", { name: "Mateo" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(
+    dialog.getByRole("button", { name: "Toda la sala" }),
+  ).toHaveAttribute("aria-pressed", "false");
+});
+
+test("publica con autora, tipo, audiencia e imágenes y se pierde al recargar", async ({
+  page,
+}) => {
+  await gotoHydrated(page, HOME);
+  const dialog = await openCreatePost(page);
+
+  await dialog.getByRole("button", { name: "Mateo" }).click();
+  await dialog.getByRole("button", { name: "Sofía" }).click();
+  await dialog.getByRole("button", { name: "Logro" }).click();
+  await dialog
+    .getByLabel("Descripción")
+    .fill("Publicación temporal de prueba");
+  await dialog.getByLabel("Agregar fotos").setInputFiles(pngFile("pintura.png"));
+  await expect(
+    dialog.getByRole("img", { name: "Imagen adjunta: pintura.png" }),
+  ).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Publicar" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL(HOME);
+
+  const articles = page.locator("article");
+  await expect(articles).toHaveCount(4);
+
+  const first = articles.first();
+  await expect(
+    first.getByRole("heading", { name: "Caro Giménez" }),
+  ).toBeVisible();
+  await expect(first.getByTestId("post-kind-achievement")).toContainText(
+    "LOGRO",
+  );
+  await expect(first.getByText("Publicación temporal de prueba")).toBeVisible();
+  await expect(
+    first.getByText("Para: Mateo Fernández, Sofía Méndez"),
+  ).toBeVisible();
+  await expect(
+    first.getByRole("img", { name: "Imagen adjunta: pintura.png" }),
+  ).toBeVisible();
+
+  await page.getByRole("link", { name: "Niños", exact: true }).click();
+  await expect(page).toHaveURL(`${BASE_URL}/kids`);
+  await page.getByRole("link", { name: "Feed", exact: true }).click();
+  await expect(page).toHaveURL(HOME);
+  await expect(page.locator("article")).toHaveCount(4);
+  await expect(page.locator("article").first()).toContainText(
+    "Publicación temporal de prueba",
+  );
+
+  await page.reload();
+  await page.waitForLoadState("networkidle");
+  await expect(page.locator("article")).toHaveCount(3);
+  await expect(page.getByText("Publicación temporal de prueba")).toHaveCount(0);
+});
+
+test("publicar desde otra sección navega al feed y «Salir» limpia las publicaciones", async ({
+  page,
+}) => {
+  await gotoHydrated(page, `${BASE_URL}/kids`);
+  const dialog = await openCreatePost(page);
+
+  await dialog.getByRole("button", { name: "Toda la sala" }).click();
+  await dialog.getByRole("button", { name: "Anuncio" }).click();
+  await dialog.getByLabel("Descripción").fill("Aviso temporal desde Niños");
+  await dialog.getByRole("button", { name: "Publicar" }).click();
+
+  await expect(page).toHaveURL(HOME);
+  await expect(page.locator("article")).toHaveCount(4);
+  const first = page.locator("article").first();
+  await expect(first).toContainText("Aviso temporal desde Niños");
+  await expect(first.getByText("Para: toda la sala")).toBeVisible();
+
+  await page.getByRole("button", { name: "Salir" }).click();
+  await expect(page).toHaveURL(`${BASE_URL}/auth/login`);
+
+  await page.getByLabel("EMAIL").fill("lucia.fernandez@gmail.com");
+  await page.getByLabel("CONTRASEÑA").fill("secreta");
+  await page.getByRole("button", { name: "Iniciar sesión" }).click();
+  await expect(page).toHaveURL(HOME);
+  await expect(page.locator("article")).toHaveCount(3);
+});
+
+test("valida formato, tamaño y cantidad de fotos y permite quitarlas", async ({
+  page,
+}) => {
+  await gotoHydrated(page, HOME);
+  const dialog = await openCreatePost(page);
+
+  await dialog.getByRole("button", { name: "Mateo" }).click();
+  await dialog.getByRole("button", { name: "Foto" }).click();
+  await dialog.getByLabel("Descripción").fill("Foto con validación");
+
+  await dialog.getByRole("button", { name: "Publicar" }).click();
+  await expect(
+    dialog.getByText("Adjuntá una imagen para publicar una foto."),
+  ).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Agregar" })).toBeFocused();
+  await expect(dialog).toBeVisible();
+  await expect(page).toHaveURL(HOME);
+
+  const fileInput = dialog.getByLabel("Agregar fotos");
+
+  await fileInput.setInputFiles({
+    name: "nota.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("no es una imagen"),
+  });
+  await expect(
+    dialog.getByText("nota.txt: Formato no admitido. Usá JPG, PNG o WebP."),
+  ).toBeVisible();
+  await expect(dialog.locator("img")).toHaveCount(0);
+
+  await fileInput.setInputFiles({
+    name: "grande.png",
+    mimeType: "image/png",
+    buffer: Buffer.alloc(5 * 1024 * 1024 + 1),
+  });
+  await expect(
+    dialog.getByText("grande.png: La imagen supera los 5 MB."),
+  ).toBeVisible();
+  await expect(dialog.locator("img")).toHaveCount(0);
+
+  await fileInput.setInputFiles([
+    pngFile("uno.png"),
+    pngFile("dos.png"),
+    pngFile("tres.png"),
+  ]);
+  await expect(dialog.locator("img")).toHaveCount(3);
+
+  await fileInput.setInputFiles(pngFile("cuatro.png"));
+  await expect(
+    dialog.getByText("Podés adjuntar hasta 3 imágenes."),
+  ).toBeVisible();
+  await expect(dialog.locator("img")).toHaveCount(3);
+  await expect(dialog.getByRole("button", { name: "Agregar" })).toHaveCount(0);
+
+  await dialog.getByRole("button", { name: "Quitar dos.png" }).click();
+  await expect(dialog.locator("img")).toHaveCount(2);
+  await expect(dialog.getByRole("button", { name: "Agregar" })).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Publicar" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator("article")).toHaveCount(4);
+  const first = page.locator("article").first();
+  await expect(first.locator("img")).toHaveCount(2);
+});
+
+test("el fondo no cierra, Tab queda atrapado y Cancelar o Esc descartan el borrador", async ({
+  page,
+}) => {
+  await gotoHydrated(page, HOME);
+  const opener = page
+    .getByRole("button", { name: "Nueva publicación" })
+    .first();
+  await opener.click();
+
+  const dialog = page.getByRole("dialog", { name: "Nueva publicación" });
+  await dialog.getByRole("button", { name: "Mateo" }).click();
+  await dialog.getByLabel("Descripción").fill("Borrador que se descarta");
+
+  await page.mouse.click(1, 1);
+  await expect(dialog).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Agregar" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(dialog.getByRole("button", { name: "Cancelar" })).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(dialog.getByRole("button", { name: "Agregar" })).toBeFocused();
+
+  await dialog.getByRole("button", { name: "Cancelar" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(opener).toBeFocused();
+
+  await opener.click();
+  const reopened = page.getByRole("dialog", { name: "Nueva publicación" });
+  await expect(reopened.getByLabel("Descripción")).toHaveValue("");
+  await expect(
+    reopened.getByRole("button", { name: "Mateo" }),
+  ).toHaveAttribute("aria-pressed", "false");
+
+  await page.keyboard.press("Escape");
+  await expect(reopened).toHaveCount(0);
+  await expect(opener).toBeFocused();
+});
+
+test("el modal y la publicación no desbordan a 375, 768 ni 1280 px", async ({
+  page,
+}) => {
+  await gotoHydrated(page, HOME);
+  const dialog = await openCreatePost(page);
+
+  await dialog.getByRole("button", { name: "Toda la sala" }).click();
+  await dialog.getByRole("button", { name: "Foto" }).click();
+  await dialog.getByLabel("Descripción").fill("Publicación ancha con fotos");
+  await dialog
+    .getByLabel("Agregar fotos")
+    .setInputFiles([pngFile("a.png"), pngFile("b.png"), pngFile("c.png")]);
+
+  for (const width of [375, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    const modalOverflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+    );
+    expect(modalOverflow, `modal a ${width}px`).toBeLessThanOrEqual(0);
+  }
+
+  await dialog.getByRole("button", { name: "Publicar" }).click();
+  await expect(dialog).toHaveCount(0);
+
+  for (const width of [375, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    const overflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+    );
+    expect(overflow, `publicación a ${width}px`).toBeLessThanOrEqual(0);
+  }
 });

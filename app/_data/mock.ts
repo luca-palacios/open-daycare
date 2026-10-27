@@ -1,7 +1,19 @@
 import { getLocalDayKey } from "../_lib/format-date";
 import { kids } from "./kids";
 
-export type PostKind = "achievement" | "activity" | "announcement";
+export type PostKind =
+  | "meal"
+  | "nap"
+  | "activity"
+  | "achievement"
+  | "mood"
+  | "photo"
+  | "announcement";
+
+export type PostImage = {
+  src: string;
+  alt: string;
+};
 
 export type Post = {
   id: string;
@@ -14,6 +26,7 @@ export type Post = {
   reactions: number;
   comments: number;
   photo?: { label: string };
+  images?: PostImage[];
 };
 
 export const TEACHER_TIME_ZONE = "America/Argentina/Buenos_Aires";

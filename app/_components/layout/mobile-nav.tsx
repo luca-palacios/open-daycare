@@ -58,7 +58,11 @@ export function MobileNav() {
         hidden={!open}
         className="border-b border-line px-4 pb-4 pt-3"
       >
-        <NewPostButton className="mb-3" />
+        <NewPostButton
+          className="mb-3"
+          onModalOpen={() => setOpen(false)}
+          onModalCancel={() => setOpen(true)}
+        />
         <NavMenu onNavigate={() => setOpen(false)} />
         <UserSummary className="mt-3" />
       </div>

@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { ComponentType } from "react";
+import { useCallback, useRef, useState, type ComponentType } from "react";
 import { BellIcon, ChildrenIcon, HomeIcon, LogoutIcon, PlusIcon, SunLogo, UserIcon } from "../ui/icons";
 import type { IconProps } from "../ui/icons";
 import { room, teacher } from "../../_data/mock";
 import { endDemoSession } from "../../_lib/demo-session";
 import { useTemporaryKids } from "../kids/temporary-kids-provider";
 import { useParentInvitations } from "../kid-profile/parent-invitations-provider";
+import { CreatePostModal } from "../feed/create-post-modal";
+import { useTemporaryPosts } from "../feed/temporary-posts-provider";
 
 type NavItem = {
   label: string;
@@ -51,15 +53,52 @@ export function Brand({ className = "" }: { className?: string }) {
   );
 }
 
-export function NewPostButton({ className = "" }: { className?: string }) {
+type NewPostButtonProps = {
+  className?: string;
+  onModalOpen?: () => void;
+  onModalCancel?: () => void;
+};
+
+export function NewPostButton({
+  className = "",
+  onModalOpen,
+  onModalCancel,
+}: NewPostButtonProps) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const handleCancel = useCallback(() => {
+    onModalCancel?.();
+    setModalOpen(false);
+    requestAnimationFrame(() => buttonRef.current?.focus());
+  }, [onModalCancel]);
+
+  const handlePublished = useCallback(() => {
+    setModalOpen(false);
+  }, []);
+
   return (
-    <button
-      type="button"
-      className={`flex w-full items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(180deg,#F4977E,#EE8164)] p-3 text-[14.5px] font-extrabold text-white shadow-[0_8px_18px_-8px_rgba(238,129,100,0.75)] ${className}`}
-    >
-      <PlusIcon className="h-[17px] w-[17px]" />
-      Nueva publicación
-    </button>
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => {
+          onModalOpen?.();
+          setModalOpen(true);
+        }}
+        className={`flex w-full items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(180deg,#F4977E,#EE8164)] p-3 text-[14.5px] font-extrabold text-white shadow-[0_8px_18px_-8px_rgba(238,129,100,0.75)] ${className}`}
+      >
+        <PlusIcon className="h-[17px] w-[17px]" />
+        Nueva publicación
+      </button>
+
+      {modalOpen && (
+        <CreatePostModal
+          onCancel={handleCancel}
+          onPublished={handlePublished}
+        />
+      )}
+    </>
   );
 }
 
@@ -101,10 +140,12 @@ export function UserSummary({ className = "" }: { className?: string }) {
   const router = useRouter();
   const { clearTemporaryKids } = useTemporaryKids();
   const { clearParentInvitations } = useParentInvitations();
+  const { clearTemporaryPosts } = useTemporaryPosts();
 
   function handleLogout() {
     clearTemporaryKids();
     clearParentInvitations();
+    clearTemporaryPosts();
     endDemoSession();
     router.replace("/auth/login");
     router.refresh();

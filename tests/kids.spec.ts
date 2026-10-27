@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 import { kids } from "../app/_data/kids";
 import { validateKidInput, type KidFormInput } from "../app/_lib/temporary-kid";
 import { gotoHydrated, seedDemoSession } from "./helpers";
@@ -6,6 +6,7 @@ import { gotoHydrated, seedDemoSession } from "./helpers";
 const BASE = "http://localhost:3000";
 const KIDS = `${BASE}/kids`;
 const LOGIN = `${BASE}/auth/login`;
+const MATEO_PROFILE = `${KIDS}/mateo-fernandez`;
 
 test.beforeEach(async ({ page }) => {
   await seedDemoSession(page.context());
@@ -70,6 +71,24 @@ async function addTemporaryKid(page: Page, input: NewKidInput): Promise<void> {
   }
 
   await page.getByRole("button", { name: "Guardar" }).click();
+}
+
+async function fillParentInvitation(
+  dialog: Locator,
+  input: { name: string; email: string; relationship?: string },
+): Promise<void> {
+  await dialog.getByLabel("Nombre del padre o madre").fill(input.name);
+  await dialog.getByLabel("Email").fill(input.email);
+
+  if (input.relationship) {
+    await dialog.getByRole("button", { name: input.relationship }).click();
+  }
+}
+
+function parentsPanel(page: Page): Locator {
+  return page.locator("section").filter({
+    has: page.getByRole("heading", { name: "Padres vinculados" }),
+  });
 }
 
 test("muestra los ocho niños y un contador de ocho", async ({ page }) => {
@@ -221,6 +240,184 @@ test("rechaza fechas imposibles y futuras", async ({ page }) => {
   await expect(page.getByLabel("Fecha de nacimiento")).toBeFocused();
 });
 
+test("el modal de vinculación abre, reinicia los campos y cierra con X o Esc", async ({
+  page,
+}) => {
+  await gotoHydrated(page, MATEO_PROFILE);
+
+  const inviteButton = page.getByRole("button", {
+    name: "Vincular otro padre",
+  });
+  await inviteButton.click();
+
+  const dialog = page.getByRole("dialog", { name: "Vincular padre" });
+  const name = dialog.getByLabel("Nombre del padre o madre");
+  const email = dialog.getByLabel("Email");
+  const code = dialog.locator("[aria-label^='Código de demostración']");
+  const firstCode = (await code.textContent())?.trim();
+
+  await expect(page).toHaveURL(MATEO_PROFILE);
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("a Mateo Fernández")).toBeVisible();
+  await expect(name).toHaveValue("");
+  await expect(email).toHaveValue("");
+  await expect(name).toBeFocused();
+  await expect(dialog.getByRole("button", { name: "Mamá" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(firstCode).toMatch(/^[A-Z0-9]{5}$/);
+
+  await page.mouse.click(1, 1);
+  await expect(dialog).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Cerrar ventana" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(inviteButton).toBeFocused();
+
+  await inviteButton.click();
+  const reopenedDialog = page.getByRole("dialog", { name: "Vincular padre" });
+  const secondCode = await reopenedDialog
+    .locator("[aria-label^='Código de demostración']")
+    .textContent();
+
+  await expect(reopenedDialog.getByLabel("Nombre del padre o madre")).toHaveValue("");
+  await expect(reopenedDialog.getByLabel("Email")).toHaveValue("");
+  await expect(
+    reopenedDialog.getByRole("button", { name: "Mamá" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(secondCode?.trim()).toMatch(/^[A-Z0-9]{5}$/);
+  expect(secondCode?.trim()).not.toBe(firstCode);
+
+  await page.keyboard.press("Escape");
+  await expect(reopenedDialog).toHaveCount(0);
+  await expect(inviteButton).toBeFocused();
+});
+
+test("valida nombre y email con errores asociados a sus campos", async ({
+  page,
+}) => {
+  await gotoHydrated(page, MATEO_PROFILE);
+  await page.getByRole("button", { name: "Vincular otro padre" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Vincular padre" });
+  const name = dialog.getByLabel("Nombre del padre o madre");
+  const email = dialog.getByLabel("Email");
+  const submitButton = dialog.getByRole("button", { name: "Crear invitación" });
+
+  await submitButton.click();
+  await expect(name).toBeFocused();
+  await expect(name).toHaveAttribute("aria-invalid", "true");
+  await expect(name).toHaveAttribute("aria-describedby", "parent-name-error");
+  await expect(email).toHaveAttribute("aria-invalid", "true");
+  await expect(email).toHaveAttribute("aria-describedby", "parent-email-error");
+  await expect(dialog.getByText("Ingresá el nombre del padre.")).toBeVisible();
+  await expect(dialog.getByText("Ingresá tu email.")).toBeVisible();
+
+  await name.fill("Ana Pérez");
+  await email.fill("email-inválido");
+  await submitButton.click();
+
+  await expect(email).toBeFocused();
+  await expect(email).toHaveAttribute("aria-invalid", "true");
+  await expect(email).toHaveAttribute("aria-describedby", "parent-email-error");
+  await expect(dialog.getByText("Ingresá un email válido.")).toBeVisible();
+});
+
+test("rechaza email duplicado en el mismo niño y permite usarlo en otro", async ({
+  page,
+}) => {
+  await gotoHydrated(page, MATEO_PROFILE);
+  await page.getByRole("button", { name: "Vincular otro padre" }).click();
+
+  let dialog = page.getByRole("dialog", { name: "Vincular padre" });
+  await fillParentInvitation(dialog, {
+    name: "Alex Pérez",
+    email: "alex@example.com",
+  });
+  await dialog.getByRole("button", { name: "Crear invitación" }).click();
+
+  await page.getByRole("button", { name: "Vincular otro padre" }).click();
+  dialog = page.getByRole("dialog", { name: "Vincular padre" });
+  await fillParentInvitation(dialog, {
+    name: "Otra persona",
+    email: "  ALEX@EXAMPLE.COM  ",
+  });
+  await dialog.getByRole("button", { name: "Crear invitación" }).click();
+
+  const duplicateEmail = dialog.getByLabel("Email");
+  await expect(duplicateEmail).toBeFocused();
+  await expect(duplicateEmail).toHaveAttribute("aria-invalid", "true");
+  await expect(
+    dialog.getByText("Ya existe una invitación para este email."),
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Cerrar ventana" }).click();
+
+  await page.getByRole("link", { name: "Volver a Niños" }).click();
+  await page.getByTestId("kid-card").filter({ hasText: "Sofía Méndez" }).click();
+  await page.getByRole("button", { name: "Vincular otro padre" }).click();
+
+  dialog = page.getByRole("dialog", { name: "Vincular padre" });
+  await fillParentInvitation(dialog, {
+    name: "Alex Pérez",
+    email: "alex@example.com",
+  });
+  await dialog.getByRole("button", { name: "Crear invitación" }).click();
+
+  const sofiaParents = parentsPanel(page);
+  await expect(sofiaParents.getByText("Alex Pérez")).toBeVisible();
+  await expect(sofiaParents).toContainText("Mamá · pendiente");
+});
+
+test("la invitación queda pendiente durante la navegación y se pierde al recargar", async ({
+  page,
+}) => {
+  await gotoHydrated(page, MATEO_PROFILE);
+  await page.getByRole("button", { name: "Vincular otro padre" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Vincular padre" });
+  const code = (
+    await dialog
+      .locator("[aria-label^='Código de demostración']")
+      .textContent()
+  )?.trim();
+  await fillParentInvitation(dialog, {
+    name: "María Demo",
+    email: "maria@example.com",
+    relationship: "Papá",
+  });
+  await dialog.getByRole("button", { name: "Crear invitación" }).click();
+
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const mateoParents = parentsPanel(page);
+  const invitationRow = mateoParents.getByRole("listitem").filter({
+    hasText: "María Demo",
+  });
+  await expect(invitationRow).toContainText("Papá · pendiente");
+  await expect(invitationRow).toContainText("PENDIENTE");
+  await expect(invitationRow).not.toContainText("enviada");
+
+  await page.getByRole("button", { name: "Vincular otro padre" }).click();
+  const reopenedDialog = page.getByRole("dialog", { name: "Vincular padre" });
+  const reopenedCode = (
+    await reopenedDialog
+      .locator("[aria-label^='Código de demostración']")
+      .textContent()
+  )?.trim();
+  await expect(reopenedDialog.getByLabel("Nombre del padre o madre")).toHaveValue("");
+  await expect(reopenedDialog.getByLabel("Email")).toHaveValue("");
+  expect(reopenedCode).not.toBe(code);
+  await reopenedDialog.getByRole("button", { name: "Cerrar ventana" }).click();
+
+  await page.getByRole("link", { name: "Volver a Niños" }).click();
+  await page.getByTestId("kid-card").filter({ hasText: "Mateo Fernández" }).click();
+  await expect(parentsPanel(page).getByText("María Demo")).toBeVisible();
+
+  await page.reload();
+  await page.waitForLoadState("networkidle");
+  await expect(parentsPanel(page).getByText("María Demo")).toHaveCount(0);
+});
+
 test("agrega a Lunas, busca en ambas salas, muestra el perfil temporal y actualiza el feed", async ({
   page,
 }) => {
@@ -258,6 +455,9 @@ test("agrega a Lunas, busca en ambas salas, muestra el perfil temporal y actuali
     page.getByRole("heading", { name: "Padres vinculados" }),
   ).toBeVisible();
   await expect(page.getByText("Sin padres vinculados")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Vincular otro padre" }),
+  ).toBeDisabled();
 
   await page.getByRole("button", { name: "Volver a Niños" }).click();
   await page.getByRole("link", { name: "Feed", exact: true }).click();
@@ -286,6 +486,16 @@ test("Salir elimina las altas temporales antes de volver a iniciar sesión", asy
   page,
 }) => {
   await gotoHydrated(page, KIDS);
+  await page.getByTestId("kid-card").filter({ hasText: "Mateo Fernández" }).click();
+  await page.getByRole("button", { name: "Vincular otro padre" }).click();
+  const dialog = page.getByRole("dialog", { name: "Vincular padre" });
+  await fillParentInvitation(dialog, {
+    name: "Padre de sesión",
+    email: "session@example.com",
+  });
+  await dialog.getByRole("button", { name: "Crear invitación" }).click();
+  await page.getByRole("link", { name: "Volver a Niños" }).click();
+
   await addTemporaryKid(page, { name: "Valeria Luna", room: "Lunas" });
   const logoutButton = page.getByRole("button", { name: "Salir" });
   await logoutButton.hover();
@@ -302,6 +512,8 @@ test("Salir elimina las altas temporales antes de volver a iniciar sesión", asy
   await page.getByRole("link", { name: "Niños", exact: true }).click();
   await expect(page.getByTestId("kids-count")).toHaveText("8 niños");
   await expect(page.getByTestId("kids-count-lunas")).toHaveText("0 niños");
+  await page.getByTestId("kid-card").filter({ hasText: "Mateo Fernández" }).click();
+  await expect(parentsPanel(page).getByText("Padre de sesión")).toHaveCount(0);
 });
 
 test("Mateo muestra su alerta y sus dos padres con estados", async ({
@@ -393,9 +605,38 @@ test("las acciones fuera de alcance no navegan", async ({ page }) => {
   await gotoHydrated(page, KIDS);
   await gotoHydrated(page, `${KIDS}/mateo-fernandez`);
 
-  for (const name of ["Editar", "Resumen del día", "Vincular otro padre"]) {
+  for (const name of ["Editar", "Resumen del día"]) {
     await page.getByRole("button", { name }).click();
     await expect(page).toHaveURL(`${KIDS}/mateo-fernandez`);
+  }
+});
+
+test("el modal de vinculación no desborda a 375, 768 ni 1280 px", async ({
+  page,
+}) => {
+  for (const width of [375, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await gotoHydrated(page, MATEO_PROFILE);
+    await page.getByRole("button", { name: "Vincular otro padre" }).click();
+
+    const dialog = page.getByRole("dialog", { name: "Vincular padre" });
+    const panel = dialog.locator("section");
+    await expect(dialog).toBeVisible();
+
+    const bounds = await panel.boundingBox();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    );
+
+    expect(bounds, `modal visible a ${width}px`).not.toBeNull();
+    expect(bounds?.x, `margen izquierdo a ${width}px`).toBeGreaterThanOrEqual(0);
+    expect(
+      (bounds?.x ?? 0) + (bounds?.width ?? 0),
+      `margen derecho a ${width}px`,
+    ).toBeLessThanOrEqual(width);
+    expect(overflow, `overflow a ${width}px`).toBeLessThanOrEqual(0);
+
+    await dialog.getByRole("button", { name: "Cerrar ventana" }).click();
   }
 });
 

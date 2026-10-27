@@ -10,6 +10,11 @@ export type PostKind =
   | "photo"
   | "announcement";
 
+export type PostImage = {
+  src: string;
+  alt: string;
+};
+
 export type Post = {
   id: string;
   kind: PostKind;
@@ -21,6 +26,7 @@ export type Post = {
   reactions: number;
   comments: number;
   photo?: { label: string };
+  images?: PostImage[];
 };
 
 export const TEACHER_TIME_ZONE = "America/Argentina/Buenos_Aires";

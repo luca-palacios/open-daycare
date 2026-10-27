@@ -1,5 +1,5 @@
 import type { Kid } from "../_data/kids";
-import type { PostKind } from "../_data/mock";
+import type { PostImage, PostKind } from "../_data/mock";
 
 export const MAX_POST_IMAGES = 3;
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -32,11 +32,6 @@ export const POST_KIND_LABELS: Record<PostKind, string> = {
 export type PostAudience =
   | { scope: "room" }
   | { scope: "kids"; kidIds: string[] };
-
-export type PostImage = {
-  src: string;
-  alt: string;
-};
 
 export type LocalPostImage = PostImage & {
   id: string;

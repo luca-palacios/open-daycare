@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fredoka, Nunito } from "next/font/google";
 import { ParentInvitationsProvider } from "./_components/kid-profile/parent-invitations-provider";
+import { TemporaryPostsProvider } from "./_components/feed/temporary-posts-provider";
 import { TemporaryKidsProvider } from "./_components/kids/temporary-kids-provider";
 import "./globals.css";
 
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <TemporaryKidsProvider>
-          <ParentInvitationsProvider>{children}</ParentInvitationsProvider>
+          <TemporaryPostsProvider>
+            <ParentInvitationsProvider>{children}</ParentInvitationsProvider>
+          </TemporaryPostsProvider>
         </TemporaryKidsProvider>
       </body>
     </html>

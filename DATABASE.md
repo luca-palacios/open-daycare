@@ -38,11 +38,22 @@ Convención: PK `id` tipo `uuid` (default `gen_random_uuid()`), y `created_at` /
 
 La guardería como entidad raíz.
 
-| Campo        | Tipo          | Notas                       |
-| ------------ | ------------- | --------------------------- |
-| `id`         | `uuid` PK     |                             |
-| `name`       | `text`        | Ej. "Guardería Sala Soles". |
-| `created_at` | `timestamptz` |                             |
+| Campo        | Tipo                       | Notas                                                      |
+| ------------ | -------------------------- | ---------------------------------------------------------- |
+| `id`         | `uuid` PK                  | Default `gen_random_uuid()`.                               |
+| `name`       | `text` NOT NULL            | CHECK `length(btrim(name)) > 0`. Sin UNIQUE sobre el nombre. |
+| `created_at` | `timestamptz` NOT NULL     | Default `now()`.                                           |
+
+> **Seguridad:** RLS activo sin políticas y sin permisos para `anon` ni `authenticated`. Solo `service_role` y el owner acceden. El aislamiento por guardería se definirá en una spec futura.
+>
+> **Datos iniciales** (cargados por la migración `create_daycares`, UUID fijos y `on conflict (id) do nothing`):
+>
+> | `id`                                   | `name`                  |
+> | -------------------------------------- | ----------------------- |
+> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b70` | Sala Soles              |
+> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b71` | Jardín Arcoíris         |
+> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b72` | Pequeños Exploradores   |
+> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b73` | Bosque de Sueños        |
 
 ---
 

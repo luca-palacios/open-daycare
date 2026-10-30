@@ -44,12 +44,12 @@ La migración insertará los cuatro nombres acordados con cuatro UUID constantes
 
 ## Acceptance criteria
 
-- [ ] `public.daycares` contiene los tres campos y las restricciones descritas.
-- [ ] Contiene exactamente los cuatro registros iniciales acordados, sin duplicados tras repetir la carga.
-- [ ] RLS está activo y `anon` y `authenticated` no tienen acceso a la tabla.
-- [ ] `public.test_table` ya no existe y la migración histórica permanece intacta.
-- [ ] La nueva migración figura en el historial de Supabase y `DATABASE.md` coincide con el esquema aplicado.
-- [ ] La verificación SQL y los asesores de seguridad no detectan exposición de `daycares`.
+- [x] `public.daycares` contiene los tres campos y las restricciones descritas.
+- [x] Contiene exactamente los cuatro registros iniciales acordados, sin duplicados tras repetir la carga.
+- [x] RLS está activo y `anon` y `authenticated` no tienen acceso a la tabla.
+- [x] `public.test_table` ya no existe y la migración histórica permanece intacta.
+- [x] La nueva migración figura en el historial de Supabase y `DATABASE.md` coincide con el esquema aplicado.
+- [x] La verificación SQL y los asesores de seguridad no detectan exposición de `daycares`.
 
 ---
 

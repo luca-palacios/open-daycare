@@ -26,6 +26,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Load `supabase` for client integration, auth/session issues, and troubleshooting.
 - Refresh both with `npx skills add supabase/agent-skills`; never edit them by hand.
 
+## Supabase SDK
+
+- The app uses `@supabase/supabase-js` and `@supabase/ssr`. Install or refresh them with `npm install --save-exact @supabase/supabase-js @supabase/ssr`, and commit the updated `package-lock.json`.
+- Keep all environment variables in the root `.env` file; do not create `.env.local` or other environment files. Preserve existing values when adding `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+- Only use the publishable key in client-side code. Never put a Supabase secret or `service_role` key in a `NEXT_PUBLIC_` variable.
+- Supabase client helpers live in `utils/supabase/`: `client.ts` for browser code, `server.ts` for server components/actions/handlers, and `proxy.ts` for cookie session refresh.
+- This app uses Next.js 16, so session refresh belongs in the root `proxy.ts` convention, not `middleware.ts`. Preserve existing demo-session routing when changing the proxy.
+
 ## Supabase MCP
 
 - `.opencode/opencode.json` registers the remote MCP `supabase` (project ref `mtbdpnkwkcmckawicjjm`, features docs, account, database, debugging, development, functions, branching).
@@ -33,7 +41,6 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Use `apply_migration` (snake_case name) for DDL and `execute_sql` for queries. Run `get_advisors` after schema changes.
 - Run `generate_typescript_types` after migrations instead of hand-writing row types.
 - `SUPABASE_DB_PASSWORD` is set in `.env` (git-ignored). Keep credentials and project refs out of code and commits.
-- The app does not consume Supabase yet: no `@supabase/supabase-js` dependency or `lib/supabase` client exists.
 
 ## Database schema
 

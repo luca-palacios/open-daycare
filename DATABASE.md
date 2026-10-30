@@ -64,16 +64,20 @@ Perfil de aplicación vinculado a **Supabase Auth**. Padres y staff comparten ta
 | Campo                       | Tipo                     | Notas                                                                    |
 | --------------------------- | ------------------------ | ------------------------------------------------------------------------ |
 | `id`                        | `uuid` PK                | FK → `auth.users(id)` ON DELETE CASCADE. Mismo UUID que Supabase Auth.   |
-| `daycare_id`                | `uuid` FK → `daycares`   |                                                                          |
-| `role`                      | `user_role`              | `staff` / `parent` / `admin`.                                            |
-| `status`                    | `user_status`            | Default `active`. El estado previo al signup se modela en `invitations`. |
-| `full_name`                 | `text`                   |                                                                          |
+| `daycare_id`                | `uuid` FK → `daycares`   | NOT NULL, `ON DELETE RESTRICT`. Sin UNIQUE: varios usuarios por guardería. |
+| `role`                      | `user_role`              | NOT NULL. `staff` / `parent` / `admin`.                                  |
+| `status`                    | `user_status`            | NOT NULL, default `active`. El estado previo al signup se modela en `invitations`. |
+| `full_name`                 | `text` NOT NULL          | CHECK `length(btrim(full_name)) > 0`.                                    |
 | `avatar_url`                | `text`                   | Nullable.                                                                |
-| `notify_on_post`            | `boolean` default `true` | Avisos cuando publican.                                                  |
-| `daily_summary_enabled`     | `boolean` default `true` | Resumen diario (19:00).                                                  |
-| `created_at` / `updated_at` | `timestamptz`            |                                                                          |
+| `notify_on_post`            | `boolean` default `true` | NOT NULL. Avisos cuando publican.                                        |
+| `daily_summary_enabled`     | `boolean` default `true` | NOT NULL. Resumen diario (19:00).                                        |
+| `created_at` / `updated_at` | `timestamptz`            | NOT NULL, default `now()`. `updated_at` lo refresca un trigger.          |
 
-> **Implementación Supabase:** crear la fila con un trigger `AFTER INSERT` en `auth.users` (función `SECURITY DEFINER`). Pasar `daycare_id`, `role` y `full_name` vía `raw_user_meta_data` en el signup. Activar RLS en esta tabla. No duplicar `email` ni `password_hash` — Supabase ya los gestiona en `auth.users`.
+> **Implementación Supabase:** la fila se crea con un trigger `AFTER INSERT` en `auth.users` (`public.handle_new_user()`, `SECURITY DEFINER` con `search_path = ''`). Exige `daycare_id`, `role` y `full_name` en `raw_user_meta_data` y rechaza el alta si falta alguno o el rol no es válido. Índice `users_daycare_id_idx` sobre `daycare_id`.
+>
+> **Seguridad:** RLS activo sin políticas y sin permisos para `anon` ni `authenticated`. El registro público de Supabase Auth debe permanecer **deshabilitado**: `raw_user_meta_data` lo controla el cliente, así que con el registro abierto cualquiera podría declararse `staff` o `admin`. No duplicar `email` ni `password_hash` — Supabase ya los gestiona en `auth.users`.
+>
+> **Cuenta de prueba:** existe un usuario `staff` vinculado a Sala Soles para pruebas manuales. Sus credenciales viven fuera del repositorio (`.env`, ignorado por Git).
 
 ---
 

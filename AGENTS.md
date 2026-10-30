@@ -19,6 +19,33 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Playwright tests are in `tests/`. Install browsers with `npx playwright install`; run one test in Chromium with `npx playwright test tests/seed.spec.ts --project=chromium`.
 - Playwright starts the app automatically through `webServer` in `playwright.config.ts` (`npm run dev` locally, `npm run start` on CI after `npm run build`). `tests/example.spec.ts` targets `playwright.dev` and is excluded with `testIgnore`.
 
+## Supabase - SKILLS
+
+- Skills live in `.agents/skills/` and are pinned in `skills-lock.json`: `supabase` (Database, Auth, Edge Functions, Storage, Realtime, CLI, SSR clients) and `supabase-postgres-best-practices`.
+- Load `supabase-postgres-best-practices` before any schema, migration, RLS, index, trigger, or SQL change, including one-column edits.
+- Load `supabase` for client integration, auth/session issues, and troubleshooting.
+- Refresh both with `npx skills add supabase/agent-skills`; never edit them by hand.
+
+## Supabase MCP
+
+- `.opencode/opencode.json` registers the remote MCP `supabase` (project ref `mtbdpnkwkcmckawicjjm`, features docs, account, database, debugging, development, functions, branching).
+- Key tools: `list_tables`, `execute_sql`, `apply_migration`, `generate_typescript_types`, `get_advisors`, `search_docs`.
+- Use `apply_migration` (snake_case name) for DDL and `execute_sql` for queries. Run `get_advisors` after schema changes.
+- Run `generate_typescript_types` after migrations instead of hand-writing row types.
+- `SUPABASE_DB_PASSWORD` is set in `.env` (git-ignored). Keep credentials and project refs out of code and commits.
+- The app does not consume Supabase yet: no `@supabase/supabase-js` dependency or `lib/supabase` client exists.
+
+## Database schema
+
+- `DATABASE.md` is the source of truth for the PostgreSQL schema. Read it before modeling, migrating, or querying.
+- Persisted values are always in English (enums, tags, codes); Spanish labels live only in the UI layer.
+- Conventions: `id uuid` PK with `gen_random_uuid()`, and `created_at` / `updated_at` as `timestamptz`.
+- `users.id` mirrors `auth.users.id` (FK `ON DELETE CASCADE`) and is created by an `AFTER INSERT` trigger (`SECURITY DEFINER`) reading `raw_user_meta_data` (`daycare_id`, `role`, `full_name`). Never duplicate `email` or `password_hash`; RLS is on for `users`.
+- Core many-to-many: `parent_children` (family links), `post_children` (post tagging), plus `invitations` for onboarding.
+- The parent feed is posts tagged with their children's `child_id` plus `announcement` posts from their room.
+- Respect documented constraints: `children.status = archived` for soft delete, UNIQUE (`parent_id`, `child_id`), UNIQUE (`post_id`, `user_id`) on reactions, UNIQUE (`child_id`, `date`) on daily summaries.
+- Update `DATABASE.md` in the same change as any migration that alters the schema.
+
 ## Spec Driven Development - SKILLS
 
 - /spec usaremos este skill para crear las especificaciones.

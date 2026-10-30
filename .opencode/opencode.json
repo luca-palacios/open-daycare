@@ -4,11 +4,7 @@
     "servers": {
       "playwright-test": {
         "type": "local",
-        "command": [
-          "npx",
-          "playwright",
-          "run-test-mcp-server"
-        ]
+        "command": ["npx", "playwright", "run-test-mcp-server"]
       },
       "playwright": {
         "type": "local",
@@ -22,6 +18,11 @@
           ".playwright-mcp"
         ],
         "codemode": false
+      },
+      "supabase": {
+        "type": "remote",
+        "url": "https://mcp.supabase.com/mcp?project_ref=mtbdpnkwkcmckawicjjm&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching",
+        "enabled": true
       }
     }
   },

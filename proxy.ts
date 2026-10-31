@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getKidById } from "./app/_data/kids";
 import { updateSession } from "./utils/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
@@ -52,13 +51,6 @@ export async function proxy(request: NextRequest) {
     response,
     NextResponse.next({ request: { headers: requestHeaders } }),
   );
-
-  if (pathname.startsWith("/kids/") && !getKidById(pathname.split("/")[2])) {
-    return preserveSessionCookies(
-      authorizedResponse,
-      NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 }),
-    );
-  }
 
   return authorizedResponse;
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Tables } from "../../../utils/supabase/database.types";
 import { getKidAvatarTone, KID_AVATAR_TONES } from "../../_lib/avatar-tones";
 import { calculateAgeInYears } from "../../_lib/kid-age";
+import { getKidInitials } from "../../_lib/kid-profile";
 import { ChevronRightIcon } from "../ui/icons";
 
 type Child = Pick<
@@ -14,16 +15,6 @@ const ALLERGY_LABELS: Record<string, string> = {
   lactose: "Lactosa",
   gluten: "Gluten",
 };
-
-function getInitials(fullName: string): string {
-  return fullName
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => Array.from(part)[0] ?? "")
-    .join("")
-    .toLocaleUpperCase("es");
-}
 
 function AllergyBadge({ label }: { label: string }) {
   return (
@@ -56,7 +47,7 @@ export function KidCard({ child, roomName }: KidCardProps) {
         aria-hidden="true"
         className={`flex h-12 w-12 flex-none items-center justify-center rounded-full font-display text-[19px] font-semibold ${KID_AVATAR_TONES[getKidAvatarTone(child.id)]}`}
       >
-        {getInitials(child.full_name)}
+        {getKidInitials(child.full_name)}
       </span>
 
       <span className="min-w-0 flex-1">

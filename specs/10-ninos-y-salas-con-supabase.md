@@ -17,7 +17,7 @@
 - Mostrar las tres salas vacías, sus contadores en cero y un mensaje «Aún no hay niños». Mantener búsqueda para los niños registrados después.
 - Guardar «Agregar niño» en `children`. El alta aparece en `/kids`, abre `/kids/[id]` y persiste tras recargas y cierre de sesión.
 - Mostrar únicamente niños con `status = active`. Un ID inexistente o archivado devuelve 404.
-- Mostrar alergias traducidas y notas médicas en secciones separadas. El selector de alergias acepta Maní, Lactosa y Gluten, que se guardan como `peanut`, `lactose` y `gluten` en `allergy_tags`. Un valor sin correspondencia se rechaza con un error visible.
+- Mostrar alergias y notas médicas en secciones separadas. El campo de alergias es una entrada libre con tags separados por comas; cada tag se guarda tal como lo escribe el usuario en `allergy_tags`, sin mapeos ni validaciones de contenido.
 - Dejar que `photo_consent` use el default definido en el esquema; el formulario no añade un control de consentimiento.
 - Actualizar el contador del feed con el total real de niños activos y la marca visible a «Estrellitas». El modal temporal de publicación obtiene destinatarios reales y activos de Soles.
 - Ejecutar las pruebas contra el proyecto Supabase existente configurado en `.env`, que se considera exclusivamente de desarrollo/pruebas y nunca se promoverá a producción. No crear una rama remota. Conservar los registros creados por las pruebas en este proyecto.
@@ -37,15 +37,7 @@
 
 La migración renombra la guardería existente mediante su UUID estable y carga de forma repetible las tres salas de Estrellitas. No crea registros en `children`.
 
-El mapeo de alergias en la capa de aplicación es:
-
-```ts
-const ALLERGY_TAGS = {
-  Maní: "peanut",
-  Lactosa: "lactose",
-  Gluten: "gluten",
-} as const;
-```
+Las alergias son entradas libres: cada tag separado por comas se guarda tal como lo escribe el usuario, sin mapeo ni validación de contenido.
 
 Los perfiles no tienen padres vinculados en esta fase. «Vincular otro padre» queda deshabilitado. `photo_consent` usa el default documentado en el esquema.
 
@@ -54,7 +46,7 @@ Los perfiles no tienen padres vinculados en esta fase. «Vincular otro padre» q
 1. Crear una migración SQL versionada para `rooms` y `children`, índices y restricciones documentados, políticas RLS y permisos mínimos. Renombrar la guardería por su UUID estable e insertar Soles, Lunas y Estrellas de forma repetible. Actualizar `DATABASE.md`.
 2. Aplicar y verificar la migración en el proyecto Supabase existente, usado exclusivamente para desarrollo/pruebas. Confirmar las tres salas, cero niños iniciales, permisos efectivos y asesores de seguridad; generar los tipos TypeScript desde el esquema aplicado.
 3. Sustituir la consulta mock de `app/kids/page.tsx` por datos reales. Adaptar `app/_components/kids/kids-directory.tsx` para mostrar salas, contadores, búsqueda, estado inicial vacío y errores de carga con reintento.
-4. Adaptar `app/_components/kids/add-kid-modal.tsx` y `app/_lib/temporary-kid.ts` para validar, traducir alergias e insertar en Supabase. Un fallo conserva el formulario y muestra un error; no crea un registro temporal.
+4. Adaptar `app/_components/kids/add-kid-modal.tsx` y `app/_lib/temporary-kid.ts` para validar los campos obligatorios, separar los tags de alergias por comas e insertar en Supabase. Un fallo conserva el formulario y muestra un error; no crea un registro temporal.
 5. Sustituir la resolución mock de `app/kids/[id]/page.tsx` por consulta de un niño activo. Adaptar los componentes del perfil para mostrar datos persistidos, notas médicas separadas y sin padres ficticios; deshabilitar «Vincular otro padre».
 6. Actualizar el contador de `app/page.tsx` y `app/_components/feed/feed-header.tsx`, los destinatarios de `app/_components/feed/create-post-modal.tsx` y los textos visibles de marca para usar el total real, niños de Soles y «Estrellitas», sin migrar publicaciones.
 7. Actualizar `tests/kids.spec.ts` y las pruebas afectadas del feed para Supabase remoto. Antes de la ejecución inicial, comprobar en el proyecto de desarrollo/pruebas que `children` está vacía y que existen las tres salas. Las pruebas crean registros con identificadores únicos y los conservan en el proyecto; configurar cero reintentos automáticos para no exceder el máximo acordado.
@@ -67,8 +59,8 @@ Los perfiles no tienen padres vinculados en esta fase. «Vincular otro padre» q
 - [ ] `/kids` muestra las tres salas con contador cero y un estado que invita a agregar el primer niño, sin mostrar los registros mock.
 - [ ] Un `staff` activo crea un niño en cualquiera de las tres salas y puede encontrarlo con la búsqueda.
 - [ ] El niño creado persiste tras recargar y cerrar y volver a iniciar sesión; su tarjeta abre `/kids/[id]`.
-- [ ] El perfil muestra nombre, sala, fechas, alergias traducidas y notas médicas por separado cuando existan.
-- [ ] Maní, Lactosa y Gluten se guardan como `peanut`, `lactose` y `gluten`; un término no mapeado impide guardar y muestra un error.
+- [ ] El perfil muestra nombre, sala, fechas, alergias tal como se guardaron y notas médicas por separado cuando existan.
+- [ ] El input de alergias acepta texto libre con tags separados por comas y guarda cada tag tal como se escribió; no hay mapeos ni validaciones de contenido.
 - [ ] El listado solo incluye niños activos; un niño archivado y un ID inexistente devuelven 404 en el perfil.
 - [ ] Un error de lectura muestra una acción de reintento; un error de inserción conserva el formulario y no presenta el niño como guardado.
 - [ ] Las políticas impiden a usuarios anónimos, usuarios de otra guardería y perfiles que no sean `staff` activos leer o insertar niños fuera de su guardería.
@@ -81,7 +73,7 @@ Los perfiles no tienen padres vinculados en esta fase. «Vincular otro padre» q
 
 - **Sí:** tabla de niños inicialmente vacía y tres salas visibles. **No:** mantener los ocho niños mock en `/kids`.
 - **Sí:** salas Soles, Lunas y Estrellas para Estrellitas. **No:** renombrar la sala Soles o crear estas salas en otras guarderías.
-- **Sí:** alergias Maní, Lactosa y Gluten con mapeo explícito a códigos ingleses. **No:** aceptar valores sin correspondencia ni inferir códigos.
+- **Sí:** alergias como entrada libre con tags separados por comas, guardadas tal como se escriben. **No:** mapear a códigos ingleses, validar valores o inferir códigos.
 - **Sí:** acceso limitado con RLS al `staff` activo de la misma guardería. **No:** acceso anónimo, de padres o administradores en esta spec.
 - **Sí:** errores visibles con reintento para lecturas y conservación del formulario cuando falle el alta. **No:** simular persistencia con estado temporal.
 - **Sí:** contador y destinatarios basados en niños reales, publicaciones aún temporales. **No:** migrar el feed completo.

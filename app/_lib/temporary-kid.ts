@@ -1,15 +1,6 @@
 import { getLocalDayKey } from "./format-date";
 import { KID_TIME_ZONE } from "./kid-age";
-
-export const ALLERGY_TAGS = {
-  Maní: "peanut",
-  Lactosa: "lactose",
-  Gluten: "gluten",
-} as const;
-
-export type AllergyLabel = keyof typeof ALLERGY_TAGS;
-export type AllergyTag = (typeof ALLERGY_TAGS)[AllergyLabel];
-export type KidFormField = "name" | "birthDate" | "room" | "allergies";
+export type KidFormField = "name" | "birthDate" | "room";
 
 export type KidFormInput = {
   name: string;
@@ -76,28 +67,5 @@ export function validateKidInput(
     errors.room = "Seleccioná una sala válida.";
   }
 
-  if (mapAllergiesToTags(input.allergies) === null) {
-    errors.allergies = "Seleccioná solo Maní, Lactosa o Gluten.";
-  }
-
   return errors;
-}
-
-export function mapAllergiesToTags(allergies: string): AllergyTag[] | null {
-  const selectedLabels = allergies
-    .split(",")
-    .map((label) => label.trim())
-    .filter(Boolean);
-  const tags: AllergyTag[] = [];
-
-  for (const label of selectedLabels) {
-    if (!isAllergyLabel(label)) return null;
-    tags.push(ALLERGY_TAGS[label]);
-  }
-
-  return [...new Set(tags)];
-}
-
-function isAllergyLabel(value: string): value is AllergyLabel {
-  return Object.hasOwn(ALLERGY_TAGS, value);
 }

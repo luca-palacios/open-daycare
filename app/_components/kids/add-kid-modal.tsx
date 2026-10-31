@@ -2,11 +2,9 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { parseAllergyTags } from "../../_lib/allergies";
 import {
-  ALLERGY_TAGS,
-  mapAllergiesToTags,
   validateKidInput,
-  type AllergyLabel,
   type KidFormErrors,
   type KidFormField,
   type KidFormInput,
@@ -17,7 +15,6 @@ import { createClient } from "../../../utils/supabase/client";
 import type { Tables } from "../../../utils/supabase/database.types";
 
 type Room = Pick<Tables<"rooms">, "id" | "name">;
-const ALLERGY_OPTIONS = Object.keys(ALLERGY_TAGS) as AllergyLabel[];
 
 const EMPTY_FORM: KidFormInput = {
   name: "",
@@ -27,12 +24,7 @@ const EMPTY_FORM: KidFormInput = {
   medicalNotes: "",
 };
 
-const FIELD_ORDER: KidFormField[] = [
-  "name",
-  "birthDate",
-  "room",
-  "allergies",
-];
+const FIELD_ORDER: KidFormField[] = ["name", "birthDate", "room"];
 
 type AddKidModalProps = {
   onClose: () => void;
@@ -79,18 +71,6 @@ export function AddKidModal({
     }
   }
 
-  function toggleAllergy(label: string, isSelected: boolean) {
-    const selectedAllergies = form.allergies
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean);
-    const nextAllergies = isSelected
-      ? [...selectedAllergies, label]
-      : selectedAllergies.filter((value) => value !== label);
-
-    updateField("allergies", [...new Set(nextAllergies)].join(", "));
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitError(null);
@@ -111,19 +91,8 @@ export function AddKidModal({
         name: nameRef,
         birthDate: birthDateRef,
         room: roomRef,
-        allergies: allergyRef,
       };
       fieldRefs[firstInvalidField].current?.focus();
-      return;
-    }
-
-    const allergyTags = mapAllergiesToTags(form.allergies);
-    if (!allergyTags) {
-      setErrors((currentErrors) => ({
-        ...currentErrors,
-        allergies: "Seleccioná solo Maní, Lactosa o Gluten.",
-      }));
-      allergyRef.current?.focus();
       return;
     }
 
@@ -137,7 +106,7 @@ export function AddKidModal({
         birth_date: form.birthDate,
         enrolled_at: getLocalDayKey(new Date(), KID_TIME_ZONE),
         medical_notes: form.medicalNotes.trim() || null,
-        allergy_tags: allergyTags,
+        allergy_tags: parseAllergyTags(form.allergies),
       });
 
       if (error) {
@@ -275,43 +244,25 @@ export function AddKidModal({
             </div>
 
             <div className="mb-[18px]">
-              <fieldset
-                aria-describedby={errors.allergies ? "kid-allergies-error" : undefined}
-              >
-                <legend className={labelClassName}>
-                  Alergias <span className="font-semibold normal-case">(opcional)</span>
-                </legend>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  {ALLERGY_OPTIONS.map((label, index) => (
-                    <label
-                      key={label}
-                      className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[12px] border border-[#EADFD0] bg-white px-3 text-[14px] font-semibold text-ink"
-                    >
-                      <input
-                        ref={index === 0 ? allergyRef : undefined}
-                        type="checkbox"
-                        name="allergies"
-                        value={label}
-                        checked={form.allergies
-                          .split(",")
-                          .map((value) => value.trim())
-                          .includes(label)}
-                        onChange={(event) =>
-                          toggleAllergy(label, event.currentTarget.checked)
-                        }
-                        aria-invalid={Boolean(errors.allergies)}
-                        className="h-4 w-4 accent-[#D9583C]"
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-              {errors.allergies && (
-                <p id="kid-allergies-error" role="alert" className={errorClassName}>
-                  {errors.allergies}
-                </p>
-              )}
+              <label htmlFor="kid-allergies" className={labelClassName}>
+                Alergias <span className="font-semibold normal-case">(opcional)</span>
+              </label>
+              <input
+                ref={allergyRef}
+                id="kid-allergies"
+                name="allergies"
+                type="text"
+                value={form.allergies}
+                onChange={(event) =>
+                  updateField("allergies", event.target.value)
+                }
+                placeholder="Ej. Maní, Lactosa"
+                aria-describedby="kid-allergies-hint"
+                className={inputClassName()}
+              />
+              <p id="kid-allergies-hint" className="mt-1.5 text-[12.5px] text-faint">
+                Separá cada alergia con comas.
+              </p>
             </div>
 
             <div>

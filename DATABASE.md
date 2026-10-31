@@ -111,14 +111,14 @@ Niños inscritos en la guardería.
 | `birth_date`                | `date` NOT NULL                 | Fecha de nacimiento.                                                       |
 | `enrolled_at`               | `date` NOT NULL                 | Fecha de ingreso a la guardería.                                            |
 | `medical_notes`             | `text`                          | Nullable. Notas médicas.                                                    |
-| `allergy_tags`              | `text[]` NOT NULL               | Default `{}`; etiquetas en inglés, ej. `{peanut}`. _Ver nota._             |
+| `allergy_tags`              | `text[]` NOT NULL               | Default `{}`; alergias en texto libre, ej. `{Maní,Lactosa}`. _Ver nota._ |
 | `photo_consent`             | `boolean` NOT NULL default `true` | Consentimiento de fotos. _Ver nota._                                     |
 | `status`                    | `child_status` NOT NULL         | Default `active`; `active` / `archived` (borrado lógico).                   |
 | `created_at` / `updated_at` | `timestamptz` NOT NULL          | Default `now()`. `updated_at` se refresca con un trigger.                   |
 
 Índice `children_room_id_status_idx` sobre (`room_id`, `status`).
 
-> **Nota `allergy_tags`:** Array de Postgres por simplicidad. Valores en inglés (`peanut`, `lactose`, `gluten`, etc.); la UI traduce a MANÍ, LACTOSA, etc. Si quieres normalizar, sácalo a una tabla `allergies` + `child_allergies`.
+> **Nota `allergy_tags`:** Array de Postgres con entradas libres, una por alergia, tal como las escribe el usuario (separadas por comas en el formulario). No hay catálogo ni mapeo. Si se requiere normalizar, sácalo a una tabla `allergies` + `child_allergies`.
 
 > **Seguridad:** RLS activo. `authenticated` tiene permiso `SELECT` e `INSERT` solo en `room_id`, `full_name`, `birth_date`, `enrolled_at`, `medical_notes` y `allergy_tags`. Las políticas limitan lectura e inserción a niños de la guardería de su perfil cuando `role = staff` y `status = active`; además, solo se pueden insertar con `status = active`. No se permiten `UPDATE` ni `DELETE` desde el cliente. `anon` no tiene permisos.
 

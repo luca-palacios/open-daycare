@@ -1,43 +1,66 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getKidById } from "./app/_data/kids";
-import { DEMO_SESSION_COOKIE, isDemoSessionValue } from "./app/_lib/demo-session";
 import { updateSession } from "./utils/supabase/proxy";
 
-const AUTH_ROUTES = new Set(["/auth/login", "/auth/activate-account"]);
-
 export async function proxy(request: NextRequest) {
-  const supabaseResponse = await updateSession(request);
+  const { response, supabase, userId } = await updateSession(request);
   const { pathname } = request.nextUrl;
-  const hasDemoSession = isDemoSessionValue(
-    request.cookies.get(DEMO_SESSION_COOKIE)?.value,
-  );
+  const isProtectedRoute =
+    pathname === "/" || pathname === "/kids" || pathname.startsWith("/kids/");
 
-  if (AUTH_ROUTES.has(pathname)) {
-    if (hasDemoSession) {
-      return preserveSessionCookies(
-        supabaseResponse,
-        NextResponse.redirect(new URL("/", request.url)),
-      );
-    }
-
-    return supabaseResponse;
+  if (!isProtectedRoute) {
+    return response;
   }
 
-  if (!hasDemoSession) {
+  if (!userId) {
     return preserveSessionCookies(
-      supabaseResponse,
+      response,
       NextResponse.redirect(new URL("/auth/login", request.url)),
     );
   }
 
+  let profileFullName: string | null = null;
+
+  try {
+    const { data: profile, error } = await supabase
+      .from("users")
+      .select("full_name, role, status")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!error && profile?.role === "staff" && profile.status === "active") {
+      profileFullName = profile.full_name;
+    }
+  } catch {
+    profileFullName = null;
+  }
+
+  if (!profileFullName) {
+    return preserveSessionCookies(
+      response,
+      NextResponse.redirect(new URL("/auth/login", request.url)),
+    );
+  }
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.delete("x-staff-full-name");
+  requestHeaders.set(
+    "x-staff-full-name",
+    encodeURIComponent(profileFullName),
+  );
+  const authorizedResponse = preserveSessionCookies(
+    response,
+    NextResponse.next({ request: { headers: requestHeaders } }),
+  );
+
   if (pathname.startsWith("/kids/") && !getKidById(pathname.split("/")[2])) {
     return preserveSessionCookies(
-      supabaseResponse,
+      authorizedResponse,
       NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 }),
     );
   }
 
-  return supabaseResponse;
+  return authorizedResponse;
 }
 
 function preserveSessionCookies(

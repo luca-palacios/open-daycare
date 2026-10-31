@@ -12,6 +12,7 @@ type AuthFieldProps = {
   placeholder?: string;
   error?: string;
   variant?: "default" | "code";
+  disabled?: boolean;
 };
 
 const INPUT_VARIANTS = {
@@ -29,6 +30,7 @@ export function AuthField({
   placeholder,
   error,
   variant = "default",
+  disabled = false,
 }: AuthFieldProps) {
   const errorId = `${id}-error`;
 
@@ -45,13 +47,14 @@ export function AuthField({
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
         autoComplete={autoComplete}
         placeholder={placeholder}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
         className={`w-full rounded-[14px] border-[1.5px] bg-white px-4 py-3.5 text-ink outline-none transition-colors placeholder:text-[#B6A99B] focus:border-auth-focus focus:ring-2 focus:ring-auth-focus/40 ${
           error ? "border-brand-dark" : "border-auth-line"
-        } ${INPUT_VARIANTS[variant]}`}
+        } ${INPUT_VARIANTS[variant]} disabled:cursor-not-allowed disabled:bg-canvas/70 disabled:opacity-70`}
       />
       {error ? (
         <p

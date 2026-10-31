@@ -1,0 +1,47 @@
+{
+  "staff": {
+    "email": "e2e-staff@example.test",
+    "password": "E2eStaffPass123!",
+    "fullName": "E2E Staff",
+    "role": "staff"
+  },
+  "pendingStaff": {
+    "email": "e2e-pending@example.test",
+    "password": "E2ePendingPass123!",
+    "fullName": "E2E Pending Staff",
+    "role": "staff",
+    "status": "pending"
+  },
+  "parentWithStaffMetadata": {
+    "email": "e2e-parent@example.test",
+    "password": "E2eParentPass123!",
+    "fullName": "E2E Parent",
+    "role": "parent",
+    "metadataRoleOverride": "staff"
+  },
+  "missingProfile": {
+    "email": "e2e-no-profile@example.test",
+    "password": "E2eNoProfilePass123!",
+    "fullName": "E2E No Profile",
+    "role": "staff",
+    "missingProfile": true
+  },
+  "revokedRole": {
+    "email": "e2e-revoked-role@example.test",
+    "password": "E2eRevokedRole123!",
+    "fullName": "E2E Revoked Role",
+    "role": "staff"
+  },
+  "revokedStatus": {
+    "email": "e2e-revoked-status@example.test",
+    "password": "E2eRevokedStatus123!",
+    "fullName": "E2E Revoked Status",
+    "role": "staff"
+  },
+  "revokedProfile": {
+    "email": "e2e-revoked-profile@example.test",
+    "password": "E2eRevokedProfile123!",
+    "fullName": "E2E Revoked Profile",
+    "role": "staff"
+  }
+}

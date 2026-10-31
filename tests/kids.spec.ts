@@ -1,15 +1,20 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { kids } from "../app/_data/kids";
 import { validateKidInput, type KidFormInput } from "../app/_lib/temporary-kid";
-import { gotoHydrated, seedDemoSession } from "./helpers";
+import {
+  BASE_URL,
+  gotoHydrated,
+  loginAsStaff,
+  supabaseAuthCookies,
+} from "./helpers";
 
-const BASE = "http://localhost:3000";
+const BASE = BASE_URL;
 const KIDS = `${BASE}/kids`;
 const LOGIN = `${BASE}/auth/login`;
 const MATEO_PROFILE = `${KIDS}/mateo-fernandez`;
 
 test.beforeEach(async ({ page }) => {
-  await seedDemoSession(page.context());
+  await loginAsStaff(page);
 });
 
 const KID_NAMES = kids.map((kid) => kid.name);
@@ -502,11 +507,9 @@ test("Salir elimina las altas temporales antes de volver a iniciar sesión", asy
   await expect(logoutButton).toHaveCSS("cursor", "pointer");
   await logoutButton.click();
   await expect(page).toHaveURL(LOGIN);
+  await expect.poll(() => supabaseAuthCookies(page.context())).toHaveLength(0);
 
-  await page.getByLabel("EMAIL").fill("lucia.fernandez@gmail.com");
-  await page.getByLabel("CONTRASEÑA").fill("secreta");
-  await page.getByRole("button", { name: "Iniciar sesión" }).click();
-  await expect(page).toHaveURL(`${BASE}/`);
+  await loginAsStaff(page);
   await expect(page.getByText(/8 niños\s*·/)).toBeVisible();
 
   await page.getByRole("link", { name: "Niños", exact: true }).click();

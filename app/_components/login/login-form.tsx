@@ -2,19 +2,35 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, useSyncExternalStore, type FormEvent } from "react";
+import { createClient } from "../../../utils/supabase/client";
 import { AuthField } from "../auth/auth-field";
 import { validateLogin, type AuthErrors } from "../../_lib/auth-validation";
-import { startDemoSession } from "../../_lib/demo-session";
+
+async function clearSession(client: ReturnType<typeof createClient>) {
+  await client.auth.signOut({ scope: "local" }).catch(() => undefined);
+}
+
+const subscribeToHydration = () => () => {};
+const getHydrationSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
 
 export function LoginForm() {
   const router = useRouter();
+  const isHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    getHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<AuthErrors>({});
+  const [formError, setFormError] = useState<string>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFormError(undefined);
 
     const nextErrors = validateLogin({ email, password });
     setErrors(nextErrors);
@@ -23,12 +39,69 @@ export function LoginForm() {
       return;
     }
 
-    startDemoSession();
-    router.replace("/");
+    setIsSubmitting(true);
+    let client: ReturnType<typeof createClient> | undefined;
+
+    try {
+      client = createClient();
+      const { data, error: signInError } = await client.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (signInError) {
+        setFormError(
+          signInError.status === 400 || signInError.status === 401
+            ? "El email o la contraseña no son correctos."
+            : "No pudimos conectar con el servicio de inicio de sesión. Intentá de nuevo.",
+        );
+        return;
+      }
+
+      if (!data.user) {
+        await clearSession(client);
+        setFormError("No pudimos verificar tu acceso al área de personal.");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await client
+        .from("users")
+        .select("role, status")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        await clearSession(client);
+        setFormError("No pudimos verificar tu acceso. Intentá de nuevo.");
+        return;
+      }
+
+      if (!profile || profile.role !== "staff" || profile.status !== "active") {
+        await clearSession(client);
+        setFormError("Tu cuenta no tiene acceso al área de personal.");
+        return;
+      }
+
+      router.replace("/");
+      router.refresh();
+    } catch {
+      if (client) {
+        await clearSession(client);
+      }
+
+      setFormError("No pudimos conectar con el servicio de inicio de sesión. Intentá de nuevo.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit}>
+    <form
+      noValidate
+      onSubmit={handleSubmit}
+      aria-busy={isSubmitting}
+      data-hydrated={isHydrated}
+    >
       <h1 className="font-display text-[30px] font-semibold text-ink">
         Iniciar sesión
       </h1>
@@ -65,11 +138,18 @@ export function LoginForm() {
         </div>
       </div>
 
+      {formError ? (
+        <p role="alert" className="mt-4 text-[13px] font-semibold text-brand-dark">
+          {formError}
+        </p>
+      ) : null}
+
       <button
         type="submit"
-        className="mt-5 w-full rounded-[15px] bg-[linear-gradient(180deg,#F4977E,#EE8164)] py-[15px] text-[16px] font-extrabold text-white shadow-[0_10px_22px_-8px_rgba(238,129,100,0.7)] transition-opacity hover:opacity-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark"
+        disabled={isSubmitting}
+        className="mt-5 w-full rounded-[15px] bg-[linear-gradient(180deg,#F4977E,#EE8164)] py-[15px] text-[16px] font-extrabold text-white shadow-[0_10px_22px_-8px_rgba(238,129,100,0.7)] transition-opacity hover:opacity-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark disabled:cursor-not-allowed disabled:opacity-70"
       >
-        Iniciar sesión
+        {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
       </button>
 
       <p className="mt-6 text-center text-[14.5px] text-muted">

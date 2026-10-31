@@ -17,6 +17,7 @@ type KidsDirectoryProps = {
   rooms: Room[];
   kids: Child[];
   loadError: boolean;
+  onAddKid: (trigger: HTMLButtonElement) => void;
 };
 
 const ROOM_ORDER: Record<string, number> = {
@@ -29,6 +30,7 @@ export function KidsDirectory({
   rooms,
   kids,
   loadError,
+  onAddKid,
 }: KidsDirectoryProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -123,7 +125,7 @@ export function KidsDirectory({
       </div>
 
       {kids.length === 0 ? (
-        <KidsEmptyState kind="no-children" />
+        <KidsEmptyState kind="no-children" onAddKid={onAddKid} />
       ) : (
         normalizedQuery &&
         matchingChildren.length === 0 && <KidsEmptyState kind="no-results" />

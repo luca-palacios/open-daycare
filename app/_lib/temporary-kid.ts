@@ -1,8 +1,15 @@
-import type { Kid } from "../_data/kids";
 import { getLocalDayKey } from "./format-date";
 import { KID_TIME_ZONE } from "./kid-age";
 
-export type KidFormField = "name" | "birthDate" | "room";
+export const ALLERGY_TAGS = {
+  Maní: "peanut",
+  Lactosa: "lactose",
+  Gluten: "gluten",
+} as const;
+
+export type AllergyLabel = keyof typeof ALLERGY_TAGS;
+export type AllergyTag = (typeof ALLERGY_TAGS)[AllergyLabel];
+export type KidFormField = "name" | "birthDate" | "room" | "allergies";
 
 export type KidFormInput = {
   name: string;
@@ -15,7 +22,6 @@ export type KidFormInput = {
 export type KidFormErrors = Partial<Record<KidFormField, string>>;
 
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
-const ROOMS = ["Soles", "Lunas"] as const;
 
 function isValidCalendarDate(value: string): boolean {
   const match = DATE_PATTERN.exec(value);
@@ -48,6 +54,7 @@ function isValidCalendarDate(value: string): boolean {
 export function validateKidInput(
   input: KidFormInput,
   now: Date = new Date(),
+  roomIds?: string[],
 ): KidFormErrors {
   const errors: KidFormErrors = {};
 
@@ -65,36 +72,32 @@ export function validateKidInput(
 
   if (!input.room) {
     errors.room = "Seleccioná una sala.";
-  } else if (!ROOMS.includes(input.room as (typeof ROOMS)[number])) {
+  } else if (roomIds && !roomIds.includes(input.room)) {
     errors.room = "Seleccioná una sala válida.";
+  }
+
+  if (mapAllergiesToTags(input.allergies) === null) {
+    errors.allergies = "Seleccioná solo Maní, Lactosa o Gluten.";
   }
 
   return errors;
 }
 
-export function createTemporaryKid(
-  input: KidFormInput,
-  now: Date = new Date(),
-): Kid {
-  const name = input.name.trim();
-  const allergies = input.allergies
+export function mapAllergiesToTags(allergies: string): AllergyTag[] | null {
+  const selectedLabels = allergies
     .split(",")
-    .map((allergy) => allergy.trim())
-    .filter(Boolean)
-    .join(", ");
+    .map((label) => label.trim())
+    .filter(Boolean);
+  const tags: AllergyTag[] = [];
 
-  return {
-    id: `temporary-${globalThis.crypto.randomUUID()}`,
-    name,
-    birthDate: input.birthDate,
-    joinedAt: getLocalDayKey(now, KID_TIME_ZONE),
-    room: input.room as Kid["room"],
-    initials: name.charAt(0).toLocaleUpperCase("es-AR"),
-    avatarTone: "sky",
-    ...(allergies ? { allergies } : {}),
-    ...(input.medicalNotes.trim()
-      ? { medicalNotes: input.medicalNotes.trim() }
-      : {}),
-    parents: [],
-  };
+  for (const label of selectedLabels) {
+    if (!isAllergyLabel(label)) return null;
+    tags.push(ALLERGY_TAGS[label]);
+  }
+
+  return [...new Set(tags)];
+}
+
+function isAllergyLabel(value: string): value is AllergyLabel {
+  return Object.hasOwn(ALLERGY_TAGS, value);
 }

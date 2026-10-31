@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { AppShell } from "../_components/layout/app-shell";
-import { KidsDirectory } from "../_components/kids/kids-directory";
-import { KidsHeader } from "../_components/kids/kids-header";
+import { KidsWorkspace } from "../_components/kids/kids-workspace";
 import { createClient } from "../../utils/supabase/server";
 import type { Tables } from "../../utils/supabase/database.types";
 
@@ -53,12 +52,19 @@ async function getKidsDirectoryData(): Promise<KidsDirectoryData> {
 async function KidsContent() {
   const directoryData = await getKidsDirectoryData();
 
-  return <KidsDirectory {...directoryData} />;
+  return <KidsWorkspace {...directoryData} />;
 }
 
 function KidsSkeleton() {
   return (
     <div aria-hidden="true" className="flex flex-col gap-[22px]">
+      <div className="mb-[22px] flex items-end justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <div className="h-3 w-16 animate-pulse rounded bg-[#E7DAC8]" />
+          <div className="h-8 w-24 animate-pulse rounded bg-[#E7DAC8]" />
+        </div>
+        <div className="h-11 w-36 animate-pulse rounded-[14px] bg-[#E7DAC8]" />
+      </div>
       <div className="h-[46px] animate-pulse rounded-[14px] border border-line bg-surface" />
       <div className="flex flex-col gap-7">
         {Array.from({ length: 3 }, (_, index) => (
@@ -83,7 +89,6 @@ export default function KidsPage() {
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-[880px] px-4 pb-20 pt-6 sm:px-8 sm:pt-8 lg:px-10 lg:pb-20 lg:pt-[34px]">
-        <KidsHeader />
         <Suspense fallback={<KidsSkeleton />}>
           <KidsContent />
         </Suspense>

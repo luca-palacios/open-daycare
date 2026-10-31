@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useRef, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useRef, useState, type ComponentType } from "react";
 import { BellIcon, ChildrenIcon, HomeIcon, LogoutIcon, PlusIcon, SunLogo, UserIcon } from "../ui/icons";
 import type { IconProps } from "../ui/icons";
 import { room, teacher } from "../../_data/mock";
-import { endDemoSession } from "../../_lib/demo-session";
+import { createClient } from "../../../utils/supabase/client";
 import { useTemporaryKids } from "../kids/temporary-kids-provider";
 import { useParentInvitations } from "../kid-profile/parent-invitations-provider";
 import { CreatePostModal } from "../feed/create-post-modal";
@@ -136,17 +136,65 @@ export function NavMenu({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-export function UserSummary({ className = "" }: { className?: string }) {
+function getInitials(fullName: string): string {
+  return fullName
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((name) => name[0].toUpperCase())
+    .join("");
+}
+
+export function UserSummary({
+  className = "",
+}: {
+  className?: string;
+}) {
   const router = useRouter();
   const { clearTemporaryKids } = useTemporaryKids();
   const { clearParentInvitations } = useParentInvitations();
   const { clearTemporaryPosts } = useTemporaryPosts();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [fullName, setFullName] = useState<string | null>(null);
+  const displayName = fullName?.trim() || "Personal";
 
-  function handleLogout() {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadFullName() {
+      const client = createClient();
+      const { data: { session } } = await client.auth.getSession();
+
+      if (!session) return;
+
+      const { data: profile, error } = await client
+        .from("users")
+        .select("full_name")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (!error && profile && isMounted) {
+        setFullName(profile.full_name);
+      }
+    }
+
+    void loadFullName().catch(() => undefined);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  async function handleLogout() {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
     clearTemporaryKids();
     clearParentInvitations();
     clearTemporaryPosts();
-    endDemoSession();
+
+    await createClient().auth.signOut({ scope: "local" }).catch(() => undefined);
     router.replace("/auth/login");
     router.refresh();
   }
@@ -155,11 +203,11 @@ export function UserSummary({ className = "" }: { className?: string }) {
     <div className={`border-t border-line pt-3.5 ${className}`}>
       <div className="flex items-center gap-[11px] px-2 py-1.5">
         <span className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-full bg-[#F2937A] font-display text-base font-semibold text-white">
-          {teacher.initials}
+          {getInitials(displayName)}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[14px] font-extrabold text-ink">
-            {teacher.name}
+            {displayName}
           </span>
           <span className="block text-xs text-faint">{teacher.role}</span>
         </span>
@@ -168,7 +216,8 @@ export function UserSummary({ className = "" }: { className?: string }) {
           title="Salir"
           aria-label="Salir"
           onClick={handleLogout}
-          className="flex h-8 w-8 flex-none cursor-pointer items-center justify-center rounded-[10px] bg-canvas text-muted transition-colors hover:text-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auth-focus"
+          disabled={isLoggingOut}
+          className="flex h-8 w-8 flex-none cursor-pointer items-center justify-center rounded-[10px] bg-canvas text-muted transition-colors hover:text-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auth-focus disabled:cursor-not-allowed disabled:opacity-60"
         >
           <LogoutIcon className="h-4 w-4" />
         </button>

@@ -1,8 +1,11 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { formatFeedDate } from "../../_lib/format-date";
 import { useVisitorTimeZone } from "../../_lib/use-visitor-time-zone";
 import { useTemporaryKids } from "../kids/temporary-kids-provider";
+
+const subscribe = () => () => {};
 
 type FeedHeaderProps = {
   eyebrow: string;
@@ -17,7 +20,11 @@ export function FeedHeader({
 }: FeedHeaderProps) {
   const timeZone = useVisitorTimeZone();
   const { temporaryKids } = useTemporaryKids();
-  const dateLabel = timeZone ? formatFeedDate(new Date(), timeZone) : "";
+  const dateLabel = useSyncExternalStore(
+    subscribe,
+    () => (timeZone ? formatFeedDate(new Date(), timeZone) : ""),
+    () => "",
+  );
   const totalChildrenCount = childrenCount + temporaryKids.length;
 
   return (

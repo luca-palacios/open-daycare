@@ -6,8 +6,7 @@ import { invitation } from "../../_data/invitation";
 
 export const metadata: Metadata = {
   title: "Activar cuenta · OpenDayCare",
-  description:
-    "Creá tu contraseña para activar la cuenta y seguir el día de tu hijo.",
+  description: "La activación de cuentas todavía no está disponible.",
 };
 
 export default function ActivateAccountPage() {
@@ -25,8 +24,8 @@ export default function ActivateAccountPage() {
           Bienvenida a OpenDayCare
         </h1>
         <p className="mb-[26px] text-[15.5px] leading-[1.55] text-muted">
-          Te invitaron a seguir el día de tu hijo. Creá tu contraseña para
-          activar la cuenta.
+          Te invitaron a seguir el día de tu hijo. La activación de cuentas
+          todavía no está disponible.
         </p>
 
         <InvitationSummary invitation={invitation} />

@@ -4,27 +4,75 @@ import { connection } from "next/server";
 import { AppShell } from "../_components/layout/app-shell";
 import { KidsDirectory } from "../_components/kids/kids-directory";
 import { KidsHeader } from "../_components/kids/kids-header";
-import { kids } from "../_data/kids";
+import { createClient } from "../../utils/supabase/server";
+import type { Tables } from "../../utils/supabase/database.types";
+
+type Room = Pick<Tables<"rooms">, "id" | "name">;
+type Child = Pick<
+  Tables<"children">,
+  "id" | "room_id" | "full_name" | "birth_date" | "allergy_tags"
+>;
+type KidsDirectoryData = {
+  rooms: Room[];
+  kids: Child[];
+  loadError: boolean;
+};
 
 export const metadata: Metadata = {
   title: "Niños · OpenDayCare",
 };
 
-async function KidsContent() {
+async function getKidsDirectoryData(): Promise<KidsDirectoryData> {
   await connection();
-  return <KidsDirectory kids={kids} />;
+
+  try {
+    const supabase = await createClient();
+    const [roomsResult, childrenResult] = await Promise.all([
+      supabase.from("rooms").select("id, name"),
+      supabase
+        .from("children")
+        .select("id, room_id, full_name, birth_date, allergy_tags")
+        .eq("status", "active")
+        .order("full_name"),
+    ]);
+
+    if (roomsResult.error || childrenResult.error) {
+      return { rooms: [], kids: [], loadError: true };
+    }
+
+    return {
+      rooms: roomsResult.data,
+      kids: childrenResult.data,
+      loadError: false,
+    };
+  } catch {
+    return { rooms: [], kids: [], loadError: true };
+  }
+}
+
+async function KidsContent() {
+  const directoryData = await getKidsDirectoryData();
+
+  return <KidsDirectory {...directoryData} />;
 }
 
 function KidsSkeleton() {
   return (
     <div aria-hidden="true" className="flex flex-col gap-[22px]">
       <div className="h-[46px] animate-pulse rounded-[14px] border border-line bg-surface" />
-      <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
-        {Array.from({ length: 8 }, (_, index) => (
-          <div
-            key={index}
-            className="h-[81px] animate-pulse rounded-[18px] border border-line bg-surface"
-          />
+      <div className="flex flex-col gap-7">
+        {Array.from({ length: 3 }, (_, index) => (
+          <section key={index} className="flex flex-col gap-3.5">
+            <div className="h-4 w-36 animate-pulse rounded bg-[#E7DAC8]" />
+            <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
+              {Array.from({ length: 2 }, (_, cardIndex) => (
+                <div
+                  key={cardIndex}
+                  className="h-[81px] animate-pulse rounded-[18px] border border-line bg-surface"
+                />
+              ))}
+            </div>
+          </section>
         ))}
       </div>
     </div>

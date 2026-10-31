@@ -1,45 +1,72 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Kid } from "../../_data/kids";
+import { useRouter } from "next/navigation";
+import type { Tables } from "../../../utils/supabase/database.types";
 import { normalizeText } from "../../_lib/normalize-text";
-import { useTemporaryKids } from "./temporary-kids-provider";
 import { KidCard } from "./kid-card";
 import { KidsEmptyState } from "./kids-empty-state";
 import { KidsSearch } from "./kids-search";
-import { TemporaryKidProfile } from "./temporary-kid-profile";
 
+type Room = Pick<Tables<"rooms">, "id" | "name">;
+type Child = Pick<
+  Tables<"children">,
+  "id" | "room_id" | "full_name" | "birth_date" | "allergy_tags"
+>;
 type KidsDirectoryProps = {
-  kids: Kid[];
+  rooms: Room[];
+  kids: Child[];
+  loadError: boolean;
 };
 
-const ROOMS: Kid["room"][] = ["Soles", "Lunas"];
+const ROOM_ORDER: Record<string, number> = {
+  Soles: 0,
+  Lunas: 1,
+  Estrellas: 2,
+};
 
-export function KidsDirectory({ kids }: KidsDirectoryProps) {
-  const { temporaryKids } = useTemporaryKids();
+export function KidsDirectory({
+  rooms,
+  kids,
+  loadError,
+}: KidsDirectoryProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [selectedTemporaryKidId, setSelectedTemporaryKidId] = useState<
-    string | null
-  >(null);
   const normalizedQuery = normalizeText(query.trim());
-  const allKids = useMemo(() => [...kids, ...temporaryKids], [kids, temporaryKids]);
-  const temporaryKidIds = useMemo(
-    () => new Set(temporaryKids.map((kid) => kid.id)),
-    [temporaryKids],
+  const orderedRooms = useMemo(
+    () =>
+      [...rooms].sort((first, second) => {
+        return (ROOM_ORDER[first.name] ?? 3) - (ROOM_ORDER[second.name] ?? 3);
+      }),
+    [rooms],
   );
-  const visibleKids = normalizedQuery
-    ? allKids.filter((kid) => normalizeText(kid.name).includes(normalizedQuery))
-    : allKids;
-  const selectedTemporaryKid = temporaryKids.find(
-    (kid) => kid.id === selectedTemporaryKidId,
+  const matchingChildren = useMemo(
+    () =>
+      normalizedQuery
+        ? kids.filter((child) =>
+            normalizeText(child.full_name).includes(normalizedQuery),
+          )
+        : kids,
+    [kids, normalizedQuery],
   );
 
-  if (selectedTemporaryKid) {
+  if (loadError) {
     return (
-      <TemporaryKidProfile
-        kid={selectedTemporaryKid}
-        onBack={() => setSelectedTemporaryKidId(null)}
-      />
+      <section
+        role="alert"
+        className="rounded-[18px] border border-[#E9B7A8] bg-[#FFF4EF] px-6 py-8 text-center"
+      >
+        <p className="font-display text-[17px] font-semibold text-ink">
+          No pudimos cargar la lista de niños.
+        </p>
+        <button
+          type="button"
+          onClick={() => router.refresh()}
+          className="mt-4 cursor-pointer rounded-[12px] border border-[#E0A38F] px-4 py-2 text-[14px] font-bold text-[#A5432F] transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark"
+        >
+          Reintentar
+        </button>
+      </section>
     );
   }
 
@@ -48,39 +75,44 @@ export function KidsDirectory({ kids }: KidsDirectoryProps) {
       <KidsSearch value={query} onChange={setQuery} />
 
       <div className="flex flex-col gap-7">
-        {ROOMS.map((room) => {
-          const roomKids = visibleKids.filter((kid) => kid.room === room);
+        {orderedRooms.map((room) => {
+          const roomChildren = matchingChildren.filter(
+            (child) => child.room_id === room.id,
+          );
+          const activeCount = kids.filter(
+            (child) => child.room_id === room.id,
+          ).length;
+          const countTestId =
+            room.name === "Soles"
+              ? "kids-count"
+              : `kids-count-${normalizeText(room.name)}`;
 
           return (
-            <section key={room} aria-labelledby={`kids-room-${room}`}>
+            <section key={room.id} aria-labelledby={`kids-room-${room.id}`}>
               <div className="mb-3.5 flex items-center gap-3">
                 <h2
-                  id={`kids-room-${room}`}
+                  id={`kids-room-${room.id}`}
                   className="text-[12.5px] font-extrabold uppercase tracking-[0.8px] text-ink"
                 >
-                  Sala {room}
+                  Sala {room.name}
                 </h2>
                 <span
-                  data-testid={
-                    room === "Soles" ? "kids-count" : "kids-count-lunas"
-                  }
+                  data-testid={countTestId}
                   aria-live="polite"
                   className="text-[13px] text-faint"
                 >
-                  {roomKids.length} {roomKids.length === 1 ? "niño" : "niños"}
+                  {activeCount} {activeCount === 1 ? "niño" : "niños"}
                 </span>
                 <span aria-hidden="true" className="h-px flex-1 bg-[#E7DAC8]" />
               </div>
 
-              {roomKids.length > 0 && (
+              {roomChildren.length > 0 && (
                 <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
-                  {roomKids.map((kid) => (
+                  {roomChildren.map((child) => (
                     <KidCard
-                      key={kid.id}
-                      kid={kid}
-                      onSelect={temporaryKidIds.has(kid.id)
-                        ? () => setSelectedTemporaryKidId(kid.id)
-                        : undefined}
+                      key={child.id}
+                      child={child}
+                      roomName={room.name}
                     />
                   ))}
                 </div>
@@ -90,7 +122,12 @@ export function KidsDirectory({ kids }: KidsDirectoryProps) {
         })}
       </div>
 
-      {normalizedQuery && visibleKids.length === 0 && <KidsEmptyState />}
+      {kids.length === 0 ? (
+        <KidsEmptyState kind="no-children" />
+      ) : (
+        normalizedQuery &&
+        matchingChildren.length === 0 && <KidsEmptyState kind="no-results" />
+      )}
     </>
   );
 }

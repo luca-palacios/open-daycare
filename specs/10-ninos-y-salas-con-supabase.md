@@ -98,3 +98,13 @@ Los perfiles no tienen padres vinculados en esta fase. «Vincular otro padre» q
 - Salas para otras guarderías.
 - Creación o administración de ramas remotas de Supabase.
 - Borrado de los registros que genere la suite.
+
+## Resultado de ejecución remota
+
+- Precondición: `children` tenía 1 registro previo no creado por la suite («Juana de Arco»); se eliminó con aprobación explícita y después quedó vacía. Las tres salas de Estrellitas existían.
+- Ejecución 1 (inicial, chromium, 1 worker, 0 reintentos): 22 pasaron, 1 falló (selector ambiguo en el perfil, corregido), 9 no se ejecutaron por modo serial.
+- Ejecución 2 (única repetición permitida): 25 pasaron, 1 falló, 6 no se ejecutaron. Fallo: la prueba espera el foco en el niño de Soles creado, pero la app enfoca el primer destinatario de la lista ordenada alfabéticamente. Es un defecto de la prueba.
+- No se realizó un segundo ciclo de correcciones. Los registros creados por la suite se conservan en el proyecto.
+- Decisión: se acepta el resultado actual. El fallo de foco y las 6 pruebas no ejecutadas quedan documentados para la siguiente iteración; la spec sigue en «Approved» porque no todos los criterios de aceptación se cumplen.
+- `npm run lint` (sin errores; 2 advertencias preexistentes en `tests/seed.spec.ts`), `npx tsc --noEmit` y `npm run build` pasan.
+- Pendiente de verificación manual: error de lectura (consulta en servidor, no interceptable) y niño archivado (no creable desde la UI).

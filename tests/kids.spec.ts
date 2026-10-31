@@ -83,7 +83,7 @@ test("cada tarjeta abre el perfil y vuelve al listado", async ({ page }) => {
   await kidCard(page, name).click();
   await expect(page).toHaveURL(/\/kids\/[0-9a-f-]{36}$/);
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
-  await expect(page.getByText("Sala Lunas")).toBeVisible();
+  await expect(page.locator("header").getByText("años · Sala Lunas")).toBeVisible();
   await expect(page.getByText("Fecha de nacimiento")).toBeVisible();
 
   await page.getByRole("link", { name: "Volver a Niños" }).click();

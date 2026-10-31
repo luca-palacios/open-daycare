@@ -48,7 +48,10 @@ export function TemporaryKidProfile({
             kidId={kid.id}
             kidName={kid.name}
             parents={kid.parents}
-            canInviteParents={false}
+            invitations={[]}
+            createInvitation={async () => ({ ok: false, message: "La vinculación no está disponible para perfiles temporales." })}
+            resendInvitation={async () => ({ ok: false, message: "La vinculación no está disponible para perfiles temporales." })}
+            cancelInvitation={async () => ({ ok: false, message: "La vinculación no está disponible para perfiles temporales." })}
           />
         </div>
       </div>

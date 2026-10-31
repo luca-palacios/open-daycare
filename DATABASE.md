@@ -155,7 +155,22 @@ El staff genera un código para vincular a un padre con un niño.
 | `status`       | `invitation_status`    | `pending` / `accepted` / `expired` / `cancelled`. |
 | `expires_at`   | `timestamptz`          |                                                   |
 | `accepted_at`  | `timestamptz`          | Nullable.                                         |
+| `last_sent_at` | `timestamptz`          | Último envío; limita reenvíos.                   |
 | `created_at`   | `timestamptz`          |                                                   |
+
+Las invitaciones y los vínculos están protegidos con RLS. El personal `staff` activo de la misma guardería puede consultar invitaciones y crear las propias; la aceptación, el reenvío y la cancelación se ejecutan exclusivamente en servidor.
+
+## 6.1. `parent_children` (vínculos persistidos)
+
+| Campo          | Tipo                   | Notas                              |
+| -------------- | ---------------------- | ---------------------------------- |
+| `id`           | `uuid` PK              | Default `gen_random_uuid()`.       |
+| `parent_id`    | `uuid` FK → `users`    | Usuario con rol `parent`.          |
+| `child_id`     | `uuid` FK → `children` | Niño vinculado.                    |
+| `relationship` | `relationship_type`    | `father`, `mother` o `guardian`.   |
+| `created_at`   | `timestamptz`          | Default `now()`.                   |
+
+UNIQUE (`parent_id`, `child_id`).
 
 ---
 

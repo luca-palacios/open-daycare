@@ -14,7 +14,12 @@ import { createClient } from "../../../utils/supabase/server";
 
 export const instant = false;
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 async function getKidProfile(id: string): Promise<KidProfileData | null> {
+  if (!UUID_PATTERN.test(id)) return null;
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("children")

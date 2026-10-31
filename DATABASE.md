@@ -75,7 +75,7 @@ Perfil de aplicación vinculado a **Supabase Auth**. Padres y staff comparten ta
 
 > **Implementación Supabase:** la fila se crea con un trigger `AFTER INSERT` en `auth.users` (`public.handle_new_user()`, `SECURITY DEFINER` con `search_path = ''`). Exige `daycare_id`, `role` y `full_name` en `raw_user_meta_data` y rechaza el alta si falta alguno o el rol no es válido. Índice `users_daycare_id_idx` sobre `daycare_id`.
 >
-> **Seguridad:** RLS activo sin políticas y sin permisos para `anon` ni `authenticated`. El registro público de Supabase Auth debe permanecer **deshabilitado**: `raw_user_meta_data` lo controla el cliente, así que con el registro abierto cualquiera podría declararse `staff` o `admin`. No duplicar `email` ni `password_hash` — Supabase ya los gestiona en `auth.users`.
+> **Seguridad:** RLS activo. `authenticated` tiene únicamente permiso `SELECT` y una política que limita la lectura a la fila propia (`id = (select auth.uid())`); no puede leer perfiles ajenos ni modificar perfiles. `anon` no tiene acceso. El registro público de Supabase Auth debe permanecer **deshabilitado**: `raw_user_meta_data` lo controla el cliente, así que con el registro abierto cualquiera podría declararse `staff` o `admin`. No duplicar `email` ni `password_hash` — Supabase ya los gestiona en `auth.users`.
 >
 > **Cuenta de prueba:** existe un usuario `staff` vinculado a Sala Soles para pruebas manuales. Sus credenciales viven fuera del repositorio (`.env`, ignorado por Git).
 

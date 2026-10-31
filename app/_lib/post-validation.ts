@@ -1,4 +1,3 @@
-import type { Kid } from "../_data/kids";
 import type { PostImage, PostKind } from "../_data/mock";
 
 export const MAX_POST_IMAGES = 3;
@@ -112,7 +111,7 @@ export function releaseImages(images: PostImage[]): void {
 
 export function describeAudience(
   audience: PostAudience,
-  kids: Kid[],
+  kids: { id: string; name: string }[],
 ): string {
   if (audience.scope === "room") {
     return "toda la sala";

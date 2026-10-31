@@ -1,10 +1,15 @@
 import { test, expect, type Page } from "@playwright/test";
-import { BASE_URL, gotoHydrated, seedDemoSession } from "./helpers";
+import {
+  BASE_URL,
+  gotoHydrated,
+  loginAsStaff,
+  supabaseAuthCookies,
+} from "./helpers";
 
-const HOME = "http://localhost:3000/";
+const HOME = `${BASE_URL}/`;
 
 test.beforeEach(async ({ page }) => {
-  await seedDemoSession(page.context());
+  await loginAsStaff(page);
 });
 
 function trackErrors(page: Page): string[] {
@@ -118,14 +123,14 @@ test("muestra la fecha del visitante en español", async ({ page }) => {
 test("formatea las horas en la zona horaria del visitante", async ({
   browser,
 }) => {
-  const zones = ["America/Argentina/Buenos_Aires", "Europe/Madrid"];
-  const results: string[][] = [];
+    const zones = ["America/Argentina/Buenos_Aires", "Europe/Madrid"];
+    const results: string[][] = [];
 
-  for (const timeZoneId of zones) {
-    const context = await browser.newContext({ timezoneId: timeZoneId });
-    await seedDemoSession(context);
-    const page = await context.newPage();
-    await gotoHydrated(page, HOME);
+    for (const timeZoneId of zones) {
+      const context = await browser.newContext({ timezoneId: timeZoneId });
+      const page = await context.newPage();
+      await loginAsStaff(page);
+      await gotoHydrated(page, HOME);
 
     const times = page.locator("article time");
     await expect(times).toHaveCount(3);
@@ -255,7 +260,7 @@ test("Feed lleva a la home y las demás acciones no navegan", async ({
   expect(new Set(hrefs)).toEqual(new Set(["/", "/kids"]));
 
   await page.getByRole("link", { name: "Niños" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/kids");
+  await expect(page).toHaveURL(`${BASE_URL}/kids`);
 
   await page.getByRole("link", { name: "Feed" }).click();
   await expect(page).toHaveURL(HOME);
@@ -278,11 +283,12 @@ test("Feed lleva a la home y las demás acciones no navegan", async ({
   }
 });
 
-test("Salir cierra la sesión demo y vuelve al login", async ({ page }) => {
+test("Salir cierra la sesión Supabase y vuelve al login", async ({ page }) => {
   await gotoHydrated(page, HOME);
 
   await page.getByRole("button", { name: "Salir" }).click();
   await expect(page).toHaveURL(`${BASE_URL}/auth/login`);
+  await expect.poll(() => supabaseAuthCookies(page.context())).toHaveLength(0);
 
   await gotoHydrated(page, HOME);
   await expect(page).toHaveURL(`${BASE_URL}/auth/login`);
@@ -470,10 +476,7 @@ test("publicar desde otra sección navega al feed y «Salir» limpia las publica
   await page.getByRole("button", { name: "Salir" }).click();
   await expect(page).toHaveURL(`${BASE_URL}/auth/login`);
 
-  await page.getByLabel("EMAIL").fill("lucia.fernandez@gmail.com");
-  await page.getByLabel("CONTRASEÑA").fill("secreta");
-  await page.getByRole("button", { name: "Iniciar sesión" }).click();
-  await expect(page).toHaveURL(HOME);
+  await loginAsStaff(page);
   await expect(page.locator("article")).toHaveCount(3);
 });
 

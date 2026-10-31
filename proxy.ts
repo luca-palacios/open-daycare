@@ -19,36 +19,48 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  let isActiveStaff = false;
+  let profileFullName: string | null = null;
 
   try {
     const { data: profile, error } = await supabase
       .from("users")
-      .select("role, status")
+      .select("full_name, role, status")
       .eq("id", userId)
       .maybeSingle();
 
-    isActiveStaff =
-      !error && profile?.role === "staff" && profile.status === "active";
+    if (!error && profile?.role === "staff" && profile.status === "active") {
+      profileFullName = profile.full_name;
+    }
   } catch {
-    isActiveStaff = false;
+    profileFullName = null;
   }
 
-  if (!isActiveStaff) {
+  if (!profileFullName) {
     return preserveSessionCookies(
       response,
       NextResponse.redirect(new URL("/auth/login", request.url)),
     );
   }
 
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.delete("x-staff-full-name");
+  requestHeaders.set(
+    "x-staff-full-name",
+    encodeURIComponent(profileFullName),
+  );
+  const authorizedResponse = preserveSessionCookies(
+    response,
+    NextResponse.next({ request: { headers: requestHeaders } }),
+  );
+
   if (pathname.startsWith("/kids/") && !getKidById(pathname.split("/")[2])) {
     return preserveSessionCookies(
-      response,
+      authorizedResponse,
       NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 }),
     );
   }
 
-  return response;
+  return authorizedResponse;
 }
 
 function preserveSessionCookies(

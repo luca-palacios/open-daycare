@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { createClient } from "../../../utils/supabase/client";
 import { AuthField } from "../auth/auth-field";
 import { validateLogin, type AuthErrors } from "../../_lib/auth-validation";
@@ -11,8 +11,17 @@ async function clearSession(client: ReturnType<typeof createClient>) {
   await client.auth.signOut({ scope: "local" }).catch(() => undefined);
 }
 
+const subscribeToHydration = () => () => {};
+const getHydrationSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
+
 export function LoginForm() {
   const router = useRouter();
+  const isHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    getHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<AuthErrors>({});
@@ -87,7 +96,12 @@ export function LoginForm() {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} aria-busy={isSubmitting}>
+    <form
+      noValidate
+      onSubmit={handleSubmit}
+      aria-busy={isSubmitting}
+      data-hydrated={isHydrated}
+    >
       <h1 className="font-display text-[30px] font-semibold text-ink">
         Iniciar sesión
       </h1>

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { CloseIcon, MenuIcon } from "../ui/icons";
 import { Brand, NavMenu, NewPostButton, UserSummary } from "./nav-menu";
 
-export function MobileNav() {
+export function MobileNav({ fullName }: { fullName: string | null }) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -64,7 +64,7 @@ export function MobileNav() {
           onModalCancel={() => setOpen(true)}
         />
         <NavMenu onNavigate={() => setOpen(false)} />
-        <UserSummary className="mt-3" />
+        <UserSummary className="mt-3" fullName={fullName} />
       </div>
     </div>
   );

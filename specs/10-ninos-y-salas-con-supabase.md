@@ -2,7 +2,7 @@
 
 > **Status:** Approved
 > **Depends on:** SPEC 02, SPEC 04, SPEC 06, SPEC 07, SPEC 08, SPEC 09
-> **Date:** 2026-10-30
+> **Date:** 2026-10-31
 > **Objective:** Sustituir los niños mock y temporales de `/kids` por salas y niños persistidos en Supabase, con altas y perfiles reales.
 
 ---
@@ -20,7 +20,7 @@
 - Mostrar alergias traducidas y notas médicas en secciones separadas. El selector de alergias acepta Maní, Lactosa y Gluten, que se guardan como `peanut`, `lactose` y `gluten` en `allergy_tags`. Un valor sin correspondencia se rechaza con un error visible.
 - Dejar que `photo_consent` use el default definido en el esquema; el formulario no añade un control de consentimiento.
 - Actualizar el contador del feed con el total real de niños activos y la marca visible a «Estrellitas». El modal temporal de publicación obtiene destinatarios reales y activos de Soles.
-- Ejecutar las pruebas de esta integración contra una rama remota de Supabase creada y conservada para pruebas. Conservar en esa rama los registros creados por las pruebas.
+- Ejecutar las pruebas contra el proyecto Supabase existente configurado en `.env`, que se considera exclusivamente de desarrollo/pruebas y nunca se promoverá a producción. No crear una rama remota. Conservar los registros creados por las pruebas en este proyecto.
 - Ejecutar la suite remota una vez inicialmente. Si se hacen correcciones por fallos, repetirla una sola vez; no iniciar un segundo ciclo de correcciones y repetición.
 - Mantener las credenciales fuera de Git y usar el `.env` existente, sin crear otro archivo de entorno.
 
@@ -52,12 +52,12 @@ Los perfiles no tienen padres vinculados en esta fase. «Vincular otro padre» q
 ## Implementation plan
 
 1. Crear una migración SQL versionada para `rooms` y `children`, índices y restricciones documentados, políticas RLS y permisos mínimos. Renombrar la guardería por su UUID estable e insertar Soles, Lunas y Estrellas de forma repetible. Actualizar `DATABASE.md`.
-2. Aplicar y verificar la migración en el proyecto y la rama remota de pruebas. Confirmar las tres salas, cero niños iniciales, permisos efectivos y asesores de seguridad; generar los tipos TypeScript desde el esquema aplicado.
+2. Aplicar y verificar la migración en el proyecto Supabase existente, usado exclusivamente para desarrollo/pruebas. Confirmar las tres salas, cero niños iniciales, permisos efectivos y asesores de seguridad; generar los tipos TypeScript desde el esquema aplicado.
 3. Sustituir la consulta mock de `app/kids/page.tsx` por datos reales. Adaptar `app/_components/kids/kids-directory.tsx` para mostrar salas, contadores, búsqueda, estado inicial vacío y errores de carga con reintento.
 4. Adaptar `app/_components/kids/add-kid-modal.tsx` y `app/_lib/temporary-kid.ts` para validar, traducir alergias e insertar en Supabase. Un fallo conserva el formulario y muestra un error; no crea un registro temporal.
 5. Sustituir la resolución mock de `app/kids/[id]/page.tsx` por consulta de un niño activo. Adaptar los componentes del perfil para mostrar datos persistidos, notas médicas separadas y sin padres ficticios; deshabilitar «Vincular otro padre».
 6. Actualizar el contador de `app/page.tsx` y `app/_components/feed/feed-header.tsx`, los destinatarios de `app/_components/feed/create-post-modal.tsx` y los textos visibles de marca para usar el total real, niños de Soles y «Estrellitas», sin migrar publicaciones.
-7. Actualizar `tests/kids.spec.ts` y las pruebas afectadas del feed para Supabase remoto. Antes de la ejecución inicial, comprobar en la rama de pruebas que `children` está vacía y que existen las tres salas. Las pruebas crean registros con identificadores únicos y los conservan en la rama; configurar cero reintentos automáticos para no exceder el máximo acordado.
+7. Actualizar `tests/kids.spec.ts` y las pruebas afectadas del feed para Supabase remoto. Antes de la ejecución inicial, comprobar en el proyecto de desarrollo/pruebas que `children` está vacía y que existen las tres salas. Las pruebas crean registros con identificadores únicos y los conservan en el proyecto; configurar cero reintentos automáticos para no exceder el máximo acordado.
 8. Ejecutar una vez las pruebas remotas, además de `npm run lint`, `npx tsc --noEmit` y `npm run build`. Si las pruebas requieren correcciones, hacer un único ciclo de corrección y repetir la suite remota una sola vez; registrar el resultado final sin iniciar más ciclos.
 
 ## Acceptance criteria
@@ -73,7 +73,7 @@ Los perfiles no tienen padres vinculados en esta fase. «Vincular otro padre» q
 - [ ] Un error de lectura muestra una acción de reintento; un error de inserción conserva el formulario y no presenta el niño como guardado.
 - [ ] Las políticas impiden a usuarios anónimos, usuarios de otra guardería y perfiles que no sean `staff` activos leer o insertar niños fuera de su guardería.
 - [ ] El feed muestra el total real de niños activos, y el modal temporal ofrece solo niños reales activos de Soles.
-- [ ] La rama remota de pruebas y los registros que esta suite crea se conservan; ningún registro de prueba se borra automáticamente.
+- [ ] La suite usa el proyecto Supabase existente, reservado para desarrollo/pruebas y nunca promovido a producción; no se crea una rama remota y ningún registro de prueba se borra automáticamente.
 - [ ] La suite remota se ejecuta una vez inicialmente y, si hay correcciones, como máximo una vez adicional; el resultado y el número de ejecuciones quedan registrados.
 - [ ] Pasan las pruebas acordadas, `npm run lint`, `npx tsc --noEmit` y `npm run build`, sujeto al límite de una única repetición de la suite remota tras correcciones.
 
@@ -85,7 +85,7 @@ Los perfiles no tienen padres vinculados en esta fase. «Vincular otro padre» q
 - **Sí:** acceso limitado con RLS al `staff` activo de la misma guardería. **No:** acceso anónimo, de padres o administradores en esta spec.
 - **Sí:** errores visibles con reintento para lecturas y conservación del formulario cuando falle el alta. **No:** simular persistencia con estado temporal.
 - **Sí:** contador y destinatarios basados en niños reales, publicaciones aún temporales. **No:** migrar el feed completo.
-- **Sí:** rama remota de pruebas creada y conservada, con registros de prueba retenidos. **No:** ejecutar contra Supabase local, borrar datos de prueba o usar la base principal como destino de la suite.
+- **Sí:** usar el proyecto Supabase existente como entorno exclusivo de desarrollo/pruebas, conservar los registros creados y no promover el proyecto a producción. **No:** crear una rama remota, ejecutar contra Supabase local o borrar datos de prueba.
 - **Sí:** una ejecución inicial y un máximo de una repetición si se corrige un fallo. **No:** encadenar ciclos de correcciones y nuevas ejecuciones.
 - **Sí:** usar el default de `photo_consent`. **No:** añadir un control nuevo al formulario.
 
@@ -93,9 +93,9 @@ Los perfiles no tienen padres vinculados en esta fase. «Vincular otro padre» q
 
 | Risk                                                                                   | Mitigation                                                                                                                               |
 | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| RLS expone datos médicos entre guarderías                                              | Verificar permisos con perfiles de prueba de distintas guarderías y una sesión anónima en la rama remota.                                |
-| Las pruebas remotas conservan registros y se repiten                                   | Usar nombres y datos identificables únicos por ejecución, conservarlos en la rama y limitar la suite a una repetición tras correcciones. |
-| La rama remota no tiene perfil `staff` o configuración de aplicación para autenticarse | Preparar la rama y sus credenciales de prueba antes de la ejecución; guardar secretos solo en `.env`, nunca en Git.                      |
+| RLS expone datos médicos entre guarderías                                              | Verificar permisos con perfiles de prueba de distintas guarderías y una sesión anónima en el proyecto de desarrollo/pruebas.             |
+| Las pruebas remotas conservan registros y se repiten                                   | Usar nombres y datos identificables únicos por ejecución, conservarlos en el proyecto y limitar la suite a una repetición tras correcciones. |
+| El proyecto de desarrollo/pruebas no tiene perfil `staff` o configuración para autenticarse | Preparar los perfiles y credenciales de prueba antes de la ejecución; guardar secretos solo en `.env`, nunca en Git.                   |
 | El feed mock referencia niños que no están en la base real                             | Mantener claro su carácter mock y limitar las opciones seleccionables a niños activos reales de Soles.                                   |
 
 ## What is **not** in this spec
@@ -104,4 +104,5 @@ Los perfiles no tienen padres vinculados en esta fase. «Vincular otro padre» q
 - Vinculación real de padres, invitaciones o acceso de roles distintos de `staff`.
 - Persistencia o migración de publicaciones.
 - Salas para otras guarderías.
-- Borrado de la rama remota de pruebas o de los registros que genere la suite.
+- Creación o administración de ramas remotas de Supabase.
+- Borrado de los registros que genere la suite.

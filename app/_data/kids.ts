@@ -1,4 +1,4 @@
-export type ParentStatus = "active" | "pending";
+export type ParentStatus = "active" | "pending" | "expired";
 
 export type Parent = {
   id: string;

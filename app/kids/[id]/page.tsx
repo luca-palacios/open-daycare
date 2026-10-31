@@ -11,6 +11,12 @@ import { KidSummaryAction } from "../../_components/kid-profile/kid-summary-acti
 import { getKidAvatarTone } from "../../_lib/avatar-tones";
 import { getKidInitials, type KidProfileData } from "../../_lib/kid-profile";
 import { createClient } from "../../../utils/supabase/server";
+import {
+  cancelParentInvitation,
+  createParentInvitation,
+  resendParentInvitation,
+} from "../../_lib/parent-invitation-server";
+import type { ParentInvitationView } from "../../_components/kid-profile/kid-parents-panel";
 
 export const instant = false;
 
@@ -70,6 +76,21 @@ export default async function KidProfilePage({
 
   if (!kid) notFound();
 
+  const supabase = await createClient();
+  const { data: invitationRows } = await supabase
+    .from("invitations")
+    .select("id, full_name, email, relationship, status, expires_at")
+    .eq("child_id", kid.id)
+    .in("status", ["pending", "accepted"])
+    .order("created_at", { ascending: false });
+  const invitations: ParentInvitationView[] = (invitationRows ?? []).map((invitation) => ({
+    id: invitation.id,
+    name: invitation.full_name,
+    email: invitation.email,
+    relationship: invitation.relationship === "mother" ? "mamá" : invitation.relationship === "father" ? "papá" : "tutor",
+    status: invitation.status === "accepted" ? "accepted" : new Date(invitation.expires_at) <= new Date() ? "expired" : "pending",
+  }));
+
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-[820px] px-4 pb-20 pt-6 sm:px-8 sm:pt-8 lg:px-10 lg:pb-20 lg:pt-[34px]">
@@ -88,7 +109,10 @@ export default async function KidProfilePage({
               kidId={kid.id}
               kidName={kid.name}
               parents={[]}
-              canInviteParents={false}
+              invitations={invitations}
+              createInvitation={createParentInvitation}
+              resendInvitation={resendParentInvitation}
+              cancelInvitation={cancelParentInvitation}
             />
           </div>
         </div>

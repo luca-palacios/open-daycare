@@ -8,7 +8,6 @@ import type { IconProps } from "../ui/icons";
 import { room, teacher } from "../../_data/mock";
 import { createClient } from "../../../utils/supabase/client";
 import { useTemporaryKids } from "../kids/temporary-kids-provider";
-import { useParentInvitations } from "../kid-profile/parent-invitations-provider";
 import { CreatePostModal } from "../feed/create-post-modal";
 import { useTemporaryPosts } from "../feed/temporary-posts-provider";
 
@@ -155,7 +154,6 @@ export function UserSummary({
 }) {
   const router = useRouter();
   const { clearTemporaryKids } = useTemporaryKids();
-  const { clearParentInvitations } = useParentInvitations();
   const { clearTemporaryPosts } = useTemporaryPosts();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const displayName = fullName?.trim() || "Personal";
@@ -165,7 +163,6 @@ export function UserSummary({
 
     setIsLoggingOut(true);
     clearTemporaryKids();
-    clearParentInvitations();
     clearTemporaryPosts();
 
     await createClient().auth.signOut({ scope: "local" }).catch(() => undefined);

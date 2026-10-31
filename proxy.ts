@@ -1,43 +1,54 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getKidById } from "./app/_data/kids";
-import { DEMO_SESSION_COOKIE, isDemoSessionValue } from "./app/_lib/demo-session";
 import { updateSession } from "./utils/supabase/proxy";
 
-const AUTH_ROUTES = new Set(["/auth/login", "/auth/activate-account"]);
-
 export async function proxy(request: NextRequest) {
-  const supabaseResponse = await updateSession(request);
+  const { response, supabase, userId } = await updateSession(request);
   const { pathname } = request.nextUrl;
-  const hasDemoSession = isDemoSessionValue(
-    request.cookies.get(DEMO_SESSION_COOKIE)?.value,
-  );
+  const isProtectedRoute =
+    pathname === "/" || pathname === "/kids" || pathname.startsWith("/kids/");
 
-  if (AUTH_ROUTES.has(pathname)) {
-    if (hasDemoSession) {
-      return preserveSessionCookies(
-        supabaseResponse,
-        NextResponse.redirect(new URL("/", request.url)),
-      );
-    }
-
-    return supabaseResponse;
+  if (!isProtectedRoute) {
+    return response;
   }
 
-  if (!hasDemoSession) {
+  if (!userId) {
     return preserveSessionCookies(
-      supabaseResponse,
+      response,
+      NextResponse.redirect(new URL("/auth/login", request.url)),
+    );
+  }
+
+  let isActiveStaff = false;
+
+  try {
+    const { data: profile, error } = await supabase
+      .from("users")
+      .select("role, status")
+      .eq("id", userId)
+      .maybeSingle();
+
+    isActiveStaff =
+      !error && profile?.role === "staff" && profile.status === "active";
+  } catch {
+    isActiveStaff = false;
+  }
+
+  if (!isActiveStaff) {
+    return preserveSessionCookies(
+      response,
       NextResponse.redirect(new URL("/auth/login", request.url)),
     );
   }
 
   if (pathname.startsWith("/kids/") && !getKidById(pathname.split("/")[2])) {
     return preserveSessionCookies(
-      supabaseResponse,
+      response,
       NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 }),
     );
   }
 
-  return supabaseResponse;
+  return response;
 }
 
 function preserveSessionCookies(

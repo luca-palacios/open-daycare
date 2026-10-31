@@ -26,7 +26,9 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getClaims();
+  const { data, error } = await supabase.auth.getClaims();
+  const userId =
+    !error && typeof data?.claims.sub === "string" ? data.claims.sub : null;
 
-  return supabaseResponse;
+  return { response: supabaseResponse, supabase, userId };
 }

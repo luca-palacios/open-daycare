@@ -25,4 +25,4 @@ Persistir las invitaciones de padres en Supabase, enviarlas mediante Resend y pe
 - [x] Se puede reenviar o cancelar una invitación pendiente.
 - [x] La activación crea la cuenta `parent` y el vínculo con el niño.
 - [x] Las claves privadas solo se usan en servidor.
-- [ ] Verificación manual del correo y activación con `jgmargarito@gmail.com`.
+- [x] Verificación manual del correo y activación con `jgmargarito@gmail.com`.

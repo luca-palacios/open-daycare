@@ -3,6 +3,7 @@
 import { Resend } from "resend";
 import { createClient } from "../../utils/supabase/server";
 import { createAdminClient } from "../../utils/supabase/admin";
+import { getInvitationForActivation } from "./parent-invitation-activation";
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -35,7 +36,9 @@ function getFromEmail() {
 }
 
 function getAppUrl() {
-  return process.env.APP_URL ?? "http://127.0.0.1:3000";
+  const appUrl = process.env.APP_URL;
+  if (!appUrl) throw new Error("APP_URL no está configurada.");
+  return appUrl.replace(/\/$/, "");
 }
 
 function escapeHtml(value: string) {
@@ -185,17 +188,6 @@ export async function cancelParentInvitation(invitationId: string): Promise<Invi
   } catch (error) {
     return { ok: false, message: error instanceof Error ? error.message : "No se pudo cancelar la invitación." };
   }
-}
-
-export async function getInvitationForActivation(code: string) {
-  const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("invitations")
-    .select("id, full_name, email, relationship, code, status, expires_at, children(id, full_name, rooms(name))")
-    .eq("code", code.trim().toUpperCase())
-    .maybeSingle();
-  if (error || !data || data.status !== "pending" || Date.parse(data.expires_at) <= Date.now()) return null;
-  return data;
 }
 
 export async function activateParentAccount(input: { code: string; email: string; password: string; photoConsent: boolean }): Promise<InvitationActionResult> {

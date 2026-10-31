@@ -1,7 +1,7 @@
-import type { Kid } from "../../_data/kids";
 import { formatKidDate, formatKidMonthYear } from "../../_lib/kid-age";
+import type { KidProfileData } from "../../_lib/kid-profile";
 
-export function KidDetails({ kid }: { kid: Kid }) {
+export function KidDetails({ kid }: { kid: KidProfileData }) {
   const rows = [
     { label: "Fecha de nacimiento", value: formatKidDate(kid.birthDate) },
     { label: "Sala", value: kid.room },

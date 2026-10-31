@@ -1,7 +1,5 @@
-import type { Kid } from "../_data/kids";
 import { getLocalDayKey } from "./format-date";
 import { KID_TIME_ZONE } from "./kid-age";
-
 export type KidFormField = "name" | "birthDate" | "room";
 
 export type KidFormInput = {
@@ -15,7 +13,6 @@ export type KidFormInput = {
 export type KidFormErrors = Partial<Record<KidFormField, string>>;
 
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
-const ROOMS = ["Soles", "Lunas"] as const;
 
 function isValidCalendarDate(value: string): boolean {
   const match = DATE_PATTERN.exec(value);
@@ -48,6 +45,7 @@ function isValidCalendarDate(value: string): boolean {
 export function validateKidInput(
   input: KidFormInput,
   now: Date = new Date(),
+  roomIds?: string[],
 ): KidFormErrors {
   const errors: KidFormErrors = {};
 
@@ -65,36 +63,9 @@ export function validateKidInput(
 
   if (!input.room) {
     errors.room = "Seleccioná una sala.";
-  } else if (!ROOMS.includes(input.room as (typeof ROOMS)[number])) {
+  } else if (roomIds && !roomIds.includes(input.room)) {
     errors.room = "Seleccioná una sala válida.";
   }
 
   return errors;
-}
-
-export function createTemporaryKid(
-  input: KidFormInput,
-  now: Date = new Date(),
-): Kid {
-  const name = input.name.trim();
-  const allergies = input.allergies
-    .split(",")
-    .map((allergy) => allergy.trim())
-    .filter(Boolean)
-    .join(", ");
-
-  return {
-    id: `temporary-${globalThis.crypto.randomUUID()}`,
-    name,
-    birthDate: input.birthDate,
-    joinedAt: getLocalDayKey(now, KID_TIME_ZONE),
-    room: input.room as Kid["room"],
-    initials: name.charAt(0).toLocaleUpperCase("es-AR"),
-    avatarTone: "sky",
-    ...(allergies ? { allergies } : {}),
-    ...(input.medicalNotes.trim()
-      ? { medicalNotes: input.medicalNotes.trim() }
-      : {}),
-    parents: [],
-  };
 }

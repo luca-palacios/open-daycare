@@ -4,14 +4,12 @@ import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ChangeEvent,
   type FormEvent,
 } from "react";
 import { createPortal } from "react-dom";
-import { kids as staticKids } from "../../_data/kids";
 import type { PostKind } from "../../_data/mock";
 import { KID_AVATAR_TONES } from "../../_lib/avatar-tones";
 import {
@@ -28,8 +26,8 @@ import {
   type PostFormErrors,
   type PostFormField,
 } from "../../_lib/post-validation";
-import { useTemporaryKids } from "../kids/temporary-kids-provider";
 import { CloseIcon, ImageIcon, PlusIcon } from "../ui/icons";
+import { useSolesKids } from "./use-soles-kids";
 import { useTemporaryPosts } from "./temporary-posts-provider";
 
 const FIELD_ORDER: PostFormField[] = [
@@ -93,8 +91,9 @@ export function CreatePostModal({
   onPublished,
 }: CreatePostModalProps) {
   const router = useRouter();
-  const { temporaryKids } = useTemporaryKids();
   const { publishPost } = useTemporaryPosts();
+  const { kids: solesKids, status: solesKidsStatus, reload: reloadSolesKids } =
+    useSolesKids();
   const [roomSelected, setRoomSelected] = useState(false);
   const [selectedKidIds, setSelectedKidIds] = useState<string[]>([]);
   const [kind, setKind] = useState<PostKind | null>(null);
@@ -115,12 +114,6 @@ export function CreatePostModal({
   useEffect(() => {
     imagesRef.current = images;
   }, [images]);
-
-  const solesKids = useMemo(
-    () =>
-      [...staticKids, ...temporaryKids].filter((kid) => kid.room === "Soles"),
-    [temporaryKids],
-  );
 
   const audience: PostAudience | null = roomSelected
     ? { scope: "room" }
@@ -301,7 +294,13 @@ export function CreatePostModal({
     if (!audience || !kind) return;
 
     ownershipTransferredRef.current = true;
-    publishPost({ kind, message, audience, images });
+    publishPost({
+      kind,
+      message,
+      audience,
+      images,
+      roomKids: solesKids.map(({ id, name }) => ({ id, name })),
+    });
     router.push("/");
     onPublished();
   }
@@ -348,6 +347,23 @@ export function CreatePostModal({
               className="mb-[22px] min-w-0"
             >
               <legend className={labelClassName}>Para</legend>
+              {solesKidsStatus === "loading" && (
+                <p className="text-[14px] text-faint">Cargando niños…</p>
+              )}
+              {solesKidsStatus === "error" && (
+                <div className="flex items-center gap-3">
+                  <p role="alert" className={errorClassName}>
+                    No pudimos cargar los niños de Soles.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={reloadSolesKids}
+                    className="cursor-pointer text-[14px] font-bold text-[#A5432F] underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark"
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              )}
               <div className="flex flex-wrap gap-[9px]">
                 {solesKids.map((kid, index) => {
                   const selected = selectedKidIds.includes(kid.id);

@@ -38,22 +38,22 @@ Convención: PK `id` tipo `uuid` (default `gen_random_uuid()`), y `created_at` /
 
 La guardería como entidad raíz.
 
-| Campo        | Tipo                       | Notas                                                      |
-| ------------ | -------------------------- | ---------------------------------------------------------- |
-| `id`         | `uuid` PK                  | Default `gen_random_uuid()`.                               |
-| `name`       | `text` NOT NULL            | CHECK `length(btrim(name)) > 0`. Sin UNIQUE sobre el nombre. |
-| `created_at` | `timestamptz` NOT NULL     | Default `now()`.                                           |
+| Campo        | Tipo                   | Notas                                                        |
+| ------------ | ---------------------- | ------------------------------------------------------------ |
+| `id`         | `uuid` PK              | Default `gen_random_uuid()`.                                 |
+| `name`       | `text` NOT NULL        | CHECK `length(btrim(name)) > 0`. Sin UNIQUE sobre el nombre. |
+| `created_at` | `timestamptz` NOT NULL | Default `now()`.                                             |
 
 > **Seguridad:** RLS activo sin políticas y sin permisos para `anon` ni `authenticated`. Solo `service_role` y el owner acceden. El aislamiento por guardería se definirá en una spec futura.
 >
 > **Datos iniciales** (cargados por la migración `create_daycares`, UUID fijos y `on conflict (id) do nothing`):
 >
-> | `id`                                   | `name`                  |
-> | -------------------------------------- | ----------------------- |
-> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b70` | Sala Soles              |
-> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b71` | Jardín Arcoíris         |
-> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b72` | Pequeños Exploradores   |
-> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b73` | Bosque de Sueños        |
+> | `id`                                   | `name`                |
+> | -------------------------------------- | --------------------- |
+> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b70` | Estrellitas           |
+> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b71` | Jardín Arcoíris       |
+> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b72` | Pequeños Exploradores |
+> | `8f0e5c6a-1b2d-4c3e-9a10-2d3e4f5a6b73` | Bosque de Sueños      |
 
 ---
 
@@ -61,17 +61,17 @@ La guardería como entidad raíz.
 
 Perfil de aplicación vinculado a **Supabase Auth**. Padres y staff comparten tabla, diferenciados por `role`. La autenticación (email, contraseña, confirmación) vive en `auth.users`; esta tabla solo guarda datos de dominio.
 
-| Campo                       | Tipo                     | Notas                                                                    |
-| --------------------------- | ------------------------ | ------------------------------------------------------------------------ |
-| `id`                        | `uuid` PK                | FK → `auth.users(id)` ON DELETE CASCADE. Mismo UUID que Supabase Auth.   |
-| `daycare_id`                | `uuid` FK → `daycares`   | NOT NULL, `ON DELETE RESTRICT`. Sin UNIQUE: varios usuarios por guardería. |
-| `role`                      | `user_role`              | NOT NULL. `staff` / `parent` / `admin`.                                  |
+| Campo                       | Tipo                     | Notas                                                                              |
+| --------------------------- | ------------------------ | ---------------------------------------------------------------------------------- |
+| `id`                        | `uuid` PK                | FK → `auth.users(id)` ON DELETE CASCADE. Mismo UUID que Supabase Auth.             |
+| `daycare_id`                | `uuid` FK → `daycares`   | NOT NULL, `ON DELETE RESTRICT`. Sin UNIQUE: varios usuarios por guardería.         |
+| `role`                      | `user_role`              | NOT NULL. `staff` / `parent` / `admin`.                                            |
 | `status`                    | `user_status`            | NOT NULL, default `active`. El estado previo al signup se modela en `invitations`. |
-| `full_name`                 | `text` NOT NULL          | CHECK `length(btrim(full_name)) > 0`.                                    |
-| `avatar_url`                | `text`                   | Nullable.                                                                |
-| `notify_on_post`            | `boolean` default `true` | NOT NULL. Avisos cuando publican.                                        |
-| `daily_summary_enabled`     | `boolean` default `true` | NOT NULL. Resumen diario (19:00).                                        |
-| `created_at` / `updated_at` | `timestamptz`            | NOT NULL, default `now()`. `updated_at` lo refresca un trigger.          |
+| `full_name`                 | `text` NOT NULL          | CHECK `length(btrim(full_name)) > 0`.                                              |
+| `avatar_url`                | `text`                   | Nullable.                                                                          |
+| `notify_on_post`            | `boolean` default `true` | NOT NULL. Avisos cuando publican.                                                  |
+| `daily_summary_enabled`     | `boolean` default `true` | NOT NULL. Resumen diario (19:00).                                                  |
+| `created_at` / `updated_at` | `timestamptz`            | NOT NULL, default `now()`. `updated_at` lo refresca un trigger.                    |
 
 > **Implementación Supabase:** la fila se crea con un trigger `AFTER INSERT` en `auth.users` (`public.handle_new_user()`, `SECURITY DEFINER` con `search_path = ''`). Exige `daycare_id`, `role` y `full_name` en `raw_user_meta_data` y rechaza el alta si falta alguno o el rol no es válido. Índice `users_daycare_id_idx` sobre `daycare_id`.
 >
@@ -83,14 +83,19 @@ Perfil de aplicación vinculado a **Supabase Auth**. Padres y staff comparten ta
 
 ## 3. `rooms` (salas)
 
-Salas de la guardería (Soles, etc.).
+Salas de una guardería. `Estrellitas` tiene las salas `Soles`, `Lunas` y `Estrellas`.
 
-| Campo        | Tipo                   | Notas        |
-| ------------ | ---------------------- | ------------ |
-| `id`         | `uuid` PK              |              |
-| `daycare_id` | `uuid` FK → `daycares` |              |
-| `name`       | `text`                 | Ej. "Soles". |
-| `created_at` | `timestamptz`          |              |
+| Campo        | Tipo                            | Notas                                                        |
+| ------------ | ------------------------------- | ------------------------------------------------------------ |
+| `id`         | `uuid` PK                       | Default `gen_random_uuid()`.                                 |
+| `daycare_id` | `uuid` FK → `daycares` NOT NULL | `ON DELETE RESTRICT`.                                        |
+| `name`       | `text` NOT NULL                 | CHECK `length(btrim(name)) > 0`.                             |
+| `created_at` | `timestamptz` NOT NULL          | Default `now()`.                                             |
+|              |                                 | UNIQUE (`daycare_id`, `name`).                               |
+
+Índice único `rooms_daycare_id_name_key` sobre (`daycare_id`, `name`).
+
+> **Seguridad:** RLS activo. `authenticated` solo tiene permiso `SELECT` y solo puede leer salas de su guardería si su perfil en `users` tiene `role = staff` y `status = active`. `anon` no tiene permisos.
 
 ---
 
@@ -100,18 +105,22 @@ Niños inscritos en la guardería.
 
 | Campo                       | Tipo                     | Notas                                            |
 | --------------------------- | ------------------------ | ------------------------------------------------ |
-| `id`                        | `uuid` PK                |                                                  |
-| `room_id`                   | `uuid` FK → `rooms`      | Nullable.                                        |
-| `full_name`                 | `text`                   |                                                  |
-| `birth_date`                | `date`                   | Fecha de nacimiento.                             |
-| `enrolled_at`               | `date`                   | Fecha de ingreso a la guardería.                 |
-| `medical_notes`             | `text`                   | Alergias y notas médicas (texto libre).          |
-| `allergy_tags`              | `text[]`                 | Etiquetas en inglés, ej. `{peanut}`. _Ver nota._ |
-| `photo_consent`             | `boolean` default `true` | Consentimiento de fotos. _Ver nota._             |
-| `status`                    | `child_status`           | `active` / `archived` (borrado lógico).          |
-| `created_at` / `updated_at` | `timestamptz`            |                                                  |
+| `id`                        | `uuid` PK                       | Default `gen_random_uuid()`.                                                |
+| `room_id`                   | `uuid` FK → `rooms` NOT NULL    | `ON DELETE RESTRICT`.                                                       |
+| `full_name`                 | `text` NOT NULL                 | CHECK `length(btrim(full_name)) > 0`.                                       |
+| `birth_date`                | `date` NOT NULL                 | Fecha de nacimiento.                                                       |
+| `enrolled_at`               | `date` NOT NULL                 | Fecha de ingreso a la guardería.                                            |
+| `medical_notes`             | `text`                          | Nullable. Notas médicas.                                                    |
+| `allergy_tags`              | `text[]` NOT NULL               | Default `{}`; alergias en texto libre, ej. `{Maní,Lactosa}`. _Ver nota._ |
+| `photo_consent`             | `boolean` NOT NULL default `true` | Consentimiento de fotos. _Ver nota._                                     |
+| `status`                    | `child_status` NOT NULL         | Default `active`; `active` / `archived` (borrado lógico).                   |
+| `created_at` / `updated_at` | `timestamptz` NOT NULL          | Default `now()`. `updated_at` se refresca con un trigger.                   |
 
-> **Nota `allergy_tags`:** Array de Postgres por simplicidad. Valores en inglés (`peanut`, `lactose`, `gluten`, etc.); la UI traduce a MANÍ, LACTOSA, etc. Si quieres normalizar, sácalo a una tabla `allergies` + `child_allergies`.
+Índice `children_room_id_status_idx` sobre (`room_id`, `status`).
+
+> **Nota `allergy_tags`:** Array de Postgres con entradas libres, una por alergia, tal como las escribe el usuario (separadas por comas en el formulario). No hay catálogo ni mapeo. Si se requiere normalizar, sácalo a una tabla `allergies` + `child_allergies`.
+
+> **Seguridad:** RLS activo. `authenticated` tiene permiso `SELECT` e `INSERT` solo en `room_id`, `full_name`, `birth_date`, `enrolled_at`, `medical_notes` y `allergy_tags`. Las políticas limitan lectura e inserción a niños de la guardería de su perfil cuando `role = staff` y `status = active`; además, solo se pueden insertar con `status = active`. No se permiten `UPDATE` ni `DELETE` desde el cliente. `anon` no tiene permisos.
 
 ---
 

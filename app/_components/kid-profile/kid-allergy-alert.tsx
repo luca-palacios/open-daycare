@@ -8,7 +8,7 @@ export function KidAllergyAlert({ allergies }: { allergies: string }) {
       </span>
       <div className="min-w-0">
         <p className="mb-0.5 text-[15px] font-extrabold text-[#C5413A]">
-          Alergias y notas
+          Alergias
         </p>
         <p className="text-[14.5px] leading-[1.5] text-[#B25249]">
           {allergies}

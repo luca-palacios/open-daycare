@@ -34,7 +34,7 @@ export function AuthBrandPanel() {
       </div>
 
       <div className="relative text-[14px] text-white/90">
-        🌿 Guardería Sala Soles
+        🌿 Guardería Estrellitas
       </div>
     </aside>
   );

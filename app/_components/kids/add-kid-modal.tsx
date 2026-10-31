@@ -1,14 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { parseAllergyTags } from "../../_lib/allergies";
 import {
-  createTemporaryKid,
   validateKidInput,
   type KidFormErrors,
   type KidFormField,
   type KidFormInput,
 } from "../../_lib/temporary-kid";
-import { useTemporaryKids } from "./temporary-kids-provider";
+import { getLocalDayKey } from "../../_lib/format-date";
+import { KID_TIME_ZONE } from "../../_lib/kid-age";
+import { createClient } from "../../../utils/supabase/client";
+import type { Tables } from "../../../utils/supabase/database.types";
+
+type Room = Pick<Tables<"rooms">, "id" | "name">;
 
 const EMPTY_FORM: KidFormInput = {
   name: "",
@@ -23,18 +29,23 @@ const FIELD_ORDER: KidFormField[] = ["name", "birthDate", "room"];
 type AddKidModalProps = {
   onClose: () => void;
   returnFocusRef: React.RefObject<HTMLButtonElement | null>;
+  rooms: Room[];
 };
 
 export function AddKidModal({
   onClose,
   returnFocusRef,
+  rooms,
 }: AddKidModalProps) {
-  const { addTemporaryKid } = useTemporaryKids();
+  const router = useRouter();
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState<KidFormErrors>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const birthDateRef = useRef<HTMLInputElement>(null);
   const roomRef = useRef<HTMLSelectElement>(null);
+  const allergyRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const returnFocusElement = returnFocusRef.current;
@@ -54,15 +65,21 @@ export function AddKidModal({
 
   function updateField(field: keyof KidFormInput, value: string) {
     setForm((currentForm) => ({ ...currentForm, [field]: value }));
+    setSubmitError(null);
     if (field in errors) {
       setErrors((currentErrors) => ({ ...currentErrors, [field]: undefined }));
     }
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSubmitError(null);
 
-    const validationErrors = validateKidInput(form);
+    const validationErrors = validateKidInput(
+      form,
+      new Date(),
+      rooms.map((room) => room.id),
+    );
     setErrors(validationErrors);
 
     const firstInvalidField = FIELD_ORDER.find(
@@ -79,8 +96,31 @@ export function AddKidModal({
       return;
     }
 
-    addTemporaryKid(createTemporaryKid(form));
-    onClose();
+    setIsSaving(true);
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("children").insert({
+        room_id: form.room,
+        full_name: form.name.trim(),
+        birth_date: form.birthDate,
+        enrolled_at: getLocalDayKey(new Date(), KID_TIME_ZONE),
+        medical_notes: form.medicalNotes.trim() || null,
+        allergy_tags: parseAllergyTags(form.allergies),
+      });
+
+      if (error) {
+        setSubmitError("No pudimos guardar al niño. Revisá los datos e intentá de nuevo.");
+        return;
+      }
+
+      router.refresh();
+      onClose();
+    } catch {
+      setSubmitError("No pudimos guardar al niño. Revisá la conexión e intentá de nuevo.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -96,6 +136,7 @@ export function AddKidModal({
             <button
               type="button"
               onClick={onClose}
+              disabled={isSaving}
               className="cursor-pointer text-left text-[14px] font-bold text-[#94887B] focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:text-[15px]"
             >
               Cancelar
@@ -108,9 +149,10 @@ export function AddKidModal({
             </h2>
             <button
               type="submit"
+              disabled={isSaving}
               className="cursor-pointer text-right text-[14px] font-extrabold text-[#D9583C] focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-dark sm:text-[15px]"
             >
-              Guardar
+              {isSaving ? "Guardando…" : "Guardar"}
             </button>
           </div>
 
@@ -187,8 +229,11 @@ export function AddKidModal({
                   className={`${inputClassName(Boolean(errors.room))} font-bold`}
                 >
                   <option value="">Seleccionar sala</option>
-                  <option value="Soles">Soles</option>
-                  <option value="Lunas">Lunas</option>
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.id}>
+                      {room.name}
+                    </option>
+                  ))}
                 </select>
                 {errors.room && (
                   <p id="kid-room-error" role="alert" className={errorClassName}>
@@ -203,15 +248,21 @@ export function AddKidModal({
                 Alergias <span className="font-semibold normal-case">(opcional)</span>
               </label>
               <input
+                ref={allergyRef}
                 id="kid-allergies"
                 name="allergies"
+                type="text"
                 value={form.allergies}
                 onChange={(event) =>
                   updateField("allergies", event.target.value)
                 }
                 placeholder="Ej. Maní, Lactosa"
+                aria-describedby="kid-allergies-hint"
                 className={inputClassName()}
               />
+              <p id="kid-allergies-hint" className="mt-1.5 text-[12.5px] text-faint">
+                Separá cada alergia con comas.
+              </p>
             </div>
 
             <div>
@@ -229,6 +280,12 @@ export function AddKidModal({
                 className={`${inputClassName()} min-h-[90px] resize-y leading-[1.5]`}
               />
             </div>
+
+            {submitError && (
+              <p role="alert" className={`${errorClassName} mt-4`}>
+                {submitError}
+              </p>
+            )}
           </div>
         </form>
       </section>

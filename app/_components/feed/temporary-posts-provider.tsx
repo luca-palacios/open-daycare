@@ -8,7 +8,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { kids } from "../../_data/kids";
 import {
   teacher,
   type Post,
@@ -21,13 +20,12 @@ import {
   releaseImages,
   type PostAudience,
 } from "../../_lib/post-validation";
-import { useTemporaryKids } from "../kids/temporary-kids-provider";
-
 export type PostDraft = {
   kind: PostKind;
   message: string;
   audience: PostAudience;
   images: PostImage[];
+  roomKids: { id: string; name: string }[];
 };
 
 type TemporaryPostsContextValue = {
@@ -40,21 +38,16 @@ const TemporaryPostsContext =
   createContext<TemporaryPostsContextValue | null>(null);
 
 export function TemporaryPostsProvider({ children }: { children: ReactNode }) {
-  const { temporaryKids } = useTemporaryKids();
   const [temporaryPosts, setTemporaryPosts] = useState<Post[]>([]);
 
   const publishPost = useCallback(
     (draft: PostDraft) => {
-      const roomKids = [...kids, ...temporaryKids].filter(
-        (kid) => kid.room === "Soles",
-      );
-
       const post: Post = {
         id: `temporary-post-${globalThis.crypto.randomUUID()}`,
         kind: draft.kind,
         authorName: teacher.name,
         authorInitials: teacher.initials,
-        audience: describeAudience(draft.audience, roomKids),
+        audience: describeAudience(draft.audience, draft.roomKids),
         publishedAt: new Date().toISOString(),
         message: draft.message.trim(),
         reactions: 0,
@@ -66,7 +59,7 @@ export function TemporaryPostsProvider({ children }: { children: ReactNode }) {
 
       setTemporaryPosts((currentPosts) => [post, ...currentPosts]);
     },
-    [temporaryKids],
+    [],
   );
 
   const clearTemporaryPosts = useCallback(() => {

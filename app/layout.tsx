@@ -20,9 +20,9 @@ const fredoka = Fredoka({
 });
 
 export const metadata: Metadata = {
-  title: "OpenDayCare · Sala Soles",
+  title: "OpenDayCare · Estrellitas",
   description:
-    "Feed de la sala Soles: logros, actividades y avisos de la guardería.",
+    "Feed de la guardería Estrellitas: logros, actividades y avisos.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

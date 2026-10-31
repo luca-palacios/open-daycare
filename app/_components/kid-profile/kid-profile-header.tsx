@@ -1,11 +1,11 @@
 import Link from "next/link";
-import type { Kid } from "../../_data/kids";
 import { KID_AVATAR_TONES } from "../../_lib/avatar-tones";
 import { calculateAgeInYears } from "../../_lib/kid-age";
+import type { KidProfileData } from "../../_lib/kid-profile";
 import { ChevronLeftIcon } from "../ui/icons";
 
 type KidProfileHeaderProps = {
-  kid: Kid;
+  kid: KidProfileData;
   onBack?: () => void;
   showEditButton?: boolean;
 };

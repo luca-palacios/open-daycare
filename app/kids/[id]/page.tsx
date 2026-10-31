@@ -4,18 +4,57 @@ import { connection } from "next/server";
 import { AppShell } from "../../_components/layout/app-shell";
 import { KidAllergyAlert } from "../../_components/kid-profile/kid-allergy-alert";
 import { KidDetails } from "../../_components/kid-profile/kid-details";
+import { KidMedicalNotes } from "../../_components/kid-profile/kid-medical-notes";
 import { KidParentsPanel } from "../../_components/kid-profile/kid-parents-panel";
 import { KidProfileHeader } from "../../_components/kid-profile/kid-profile-header";
 import { KidSummaryAction } from "../../_components/kid-profile/kid-summary-action";
-import { getKidById } from "../../_data/kids";
+import { getKidAvatarTone } from "../../_lib/avatar-tones";
+import { getKidInitials, type KidProfileData } from "../../_lib/kid-profile";
+import { createClient } from "../../../utils/supabase/server";
 
 export const instant = false;
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function getKidProfile(id: string): Promise<KidProfileData | null> {
+  if (!UUID_PATTERN.test(id)) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("children")
+    .select(
+      "id, full_name, birth_date, enrolled_at, medical_notes, allergy_tags, rooms!inner(name)",
+    )
+    .eq("id", id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (error) throw new Error("No se pudo cargar el perfil del niño.");
+  if (!data?.rooms) return null;
+
+  const medicalNotes = data.medical_notes?.trim();
+
+  return {
+    id: data.id,
+    name: data.full_name,
+    birthDate: data.birth_date,
+    joinedAt: data.enrolled_at,
+    room: data.rooms.name,
+    initials: getKidInitials(data.full_name),
+    avatarTone: getKidAvatarTone(data.id),
+    ...(data.allergy_tags.length > 0
+      ? { allergies: data.allergy_tags.join(", ") }
+      : {}),
+    ...(medicalNotes ? { medicalNotes } : {}),
+  };
+}
 
 export async function generateMetadata({
   params,
 }: PageProps<"/kids/[id]">): Promise<Metadata> {
   const { id } = await params;
-  const kid = getKidById(id);
+  const kid = await getKidProfile(id).catch(() => null);
 
   return {
     title: kid ? `${kid.name} · OpenDayCare` : "Niño no encontrado · OpenDayCare",
@@ -27,7 +66,7 @@ export default async function KidProfilePage({
 }: PageProps<"/kids/[id]">) {
   await connection();
   const { id } = await params;
-  const kid = getKidById(id);
+  const kid = await getKidProfile(id);
 
   if (!kid) notFound();
 
@@ -39,6 +78,7 @@ export default async function KidProfilePage({
         <div className="mt-5 flex flex-wrap items-start gap-[26px]">
           <div className="flex min-w-0 flex-[1_1_300px] flex-col gap-[18px]">
             {kid.allergies && <KidAllergyAlert allergies={kid.allergies} />}
+            {kid.medicalNotes && <KidMedicalNotes notes={kid.medicalNotes} />}
             <KidDetails kid={kid} />
           </div>
 
@@ -47,8 +87,8 @@ export default async function KidProfilePage({
             <KidParentsPanel
               kidId={kid.id}
               kidName={kid.name}
-              parents={kid.parents}
-              canInviteParents
+              parents={[]}
+              canInviteParents={false}
             />
           </div>
         </div>

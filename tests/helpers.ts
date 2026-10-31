@@ -1,14 +1,30 @@
+import { existsSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { expect, type BrowserContext, type Page, type Response } from "@playwright/test";
 import e2eUsers from "./e2e-users.json";
 
+if (existsSync(".env")) process.loadEnvFile(".env");
+
 export const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 export const LOGIN_URL = `${BASE_URL}/auth/login`;
 export const E2E_USERS = e2eUsers;
+export const RUN_ID = Date.now().toString(36);
+export const SOLES_FIRST_NAME = `Solita${RUN_ID}`;
+export const SOLES_KID_NAME = `${SOLES_FIRST_NAME} Prueba`;
+export const LUNAS_FIRST_NAME = `Lunita${RUN_ID}`;
+export const LUNAS_KID_NAME = `${LUNAS_FIRST_NAME} Prueba`;
 
 type LoginCredentials = {
   email: string;
   password: string;
+};
+
+export type NewKidInput = {
+  name: string;
+  room: "Soles" | "Lunas" | "Estrellas";
+  birthDate?: string;
+  allergies?: string;
+  medicalNotes?: string;
 };
 
 export async function gotoHydrated(
@@ -38,6 +54,46 @@ export async function loginAsStaff(page: Page): Promise<void> {
   await gotoHydrated(page, LOGIN_URL);
   await submitLoginForm(page, E2E_USERS.staff);
   await expect(page).toHaveURL(`${BASE_URL}/`);
+}
+
+function getTestStaffCredentials(): LoginCredentials {
+  const email = process.env.TEST_STAFF_EMAIL;
+  const password = process.env.TEST_STAFF_PASSWORD;
+
+  if (!email || !password) {
+    throw new Error("TEST_STAFF_EMAIL y TEST_STAFF_PASSWORD deben estar en .env.");
+  }
+
+  return { email, password };
+}
+
+export async function loginAsTestStaff(page: Page): Promise<void> {
+  await gotoHydrated(page, LOGIN_URL);
+  await submitLoginForm(page, getTestStaffCredentials());
+  await expect(page).toHaveURL(`${BASE_URL}/`);
+}
+
+export async function addKid(page: Page, input: NewKidInput): Promise<void> {
+  await page.getByRole("button", { name: "Agregar niño" }).first().click();
+
+  const dialog = page.getByRole("dialog", { name: "Agregar niño" });
+  await dialog.getByLabel("Nombre completo").fill(input.name);
+  await dialog.getByLabel("Fecha de nacimiento").fill(input.birthDate ?? "2024-01-15");
+  await dialog.getByLabel("Sala", { exact: true }).selectOption({ label: input.room });
+
+  if (input.allergies) {
+    await dialog.getByLabel(/Alergias/).fill(input.allergies);
+  }
+
+  if (input.medicalNotes) {
+    await dialog.getByLabel(/Notas médicas/).fill(input.medicalNotes);
+  }
+
+  await dialog.getByRole("button", { name: "Guardar" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(
+    page.getByTestId("kid-card").filter({ hasText: input.name }),
+  ).toBeVisible();
 }
 
 export async function supabaseAuthCookies(

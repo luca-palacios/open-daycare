@@ -1,5 +1,4 @@
 import { getLocalDayKey } from "../_lib/format-date";
-import { kids } from "./kids";
 
 export type PostKind =
   | "meal"
@@ -33,10 +32,8 @@ export const TEACHER_TIME_ZONE = "America/Argentina/Buenos_Aires";
 const UTC_OFFSET = "-03:00"; // Argentina no aplica horario de verano
 
 export const room = {
-  name: "Sala Soles",
-  shortName: "Soles",
-  eyebrow: "Guardería · Sala Soles",
-  childrenCount: kids.length,
+  name: "Estrellitas",
+  eyebrow: "Guardería · Estrellitas",
 } as const;
 
 export const teacher = {

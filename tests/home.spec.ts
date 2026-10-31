@@ -1,15 +1,33 @@
 import { test, expect, type Page } from "@playwright/test";
 import {
   BASE_URL,
+  LUNAS_FIRST_NAME,
+  LUNAS_KID_NAME,
+  SOLES_FIRST_NAME,
+  SOLES_KID_NAME,
+  addKid,
   gotoHydrated,
-  loginAsStaff,
+  loginAsTestStaff,
   supabaseAuthCookies,
 } from "./helpers";
 
 const HOME = `${BASE_URL}/`;
+const KIDS = `${BASE_URL}/kids`;
+
+test.describe.configure({ mode: "serial" });
+
+test.beforeAll(async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await loginAsTestStaff(page);
+  await gotoHydrated(page, KIDS);
+  await addKid(page, { name: SOLES_KID_NAME, room: "Soles" });
+  await addKid(page, { name: LUNAS_KID_NAME, room: "Lunas" });
+  await context.close();
+});
 
 test.beforeEach(async ({ page }) => {
-  await loginAsStaff(page);
+  await loginAsTestStaff(page);
 });
 
 function trackErrors(page: Page): string[] {
@@ -40,18 +58,6 @@ async function openCreatePost(page: Page) {
   const dialog = page.getByRole("dialog", { name: "Nueva publicación" });
   await expect(dialog).toBeVisible();
   return dialog;
-}
-
-async function addTemporaryKid(
-  page: Page,
-  input: { name: string; room: "Soles" | "Lunas" },
-): Promise<void> {
-  await page.getByRole("button", { name: "Agregar niño" }).click();
-  await page.getByLabel("Nombre completo").fill(input.name);
-  await page.getByLabel("Fecha de nacimiento").fill("2024-01-15");
-  await page.getByLabel("Sala", { exact: true }).selectOption(input.room);
-  await page.getByRole("button", { name: "Guardar" }).click();
-  await expect(page.getByRole("dialog", { name: "Agregar niño" })).toHaveCount(0);
 }
 
 test("muestra las tres publicaciones de la referencia", async ({ page }) => {
@@ -95,6 +101,26 @@ test("muestra las tres publicaciones de la referencia", async ({ page }) => {
   await expect(page.getByText("Foto · pintando con témperas")).toBeVisible();
 });
 
+test("el contador del feed coincide con los niños activos de las salas", async ({
+  page,
+}) => {
+  await gotoHydrated(page, KIDS);
+
+  const counts = await Promise.all(
+    ["kids-count", "kids-count-lunas", "kids-count-estrellas"].map((testId) =>
+      page.getByTestId(testId).textContent(),
+    ),
+  );
+  const total = counts.reduce(
+    (sum, text) => sum + Number(text?.match(/\d+/)?.[0] ?? 0),
+    0,
+  );
+
+  await page.getByRole("link", { name: "Feed", exact: true }).click();
+  await expect(page).toHaveURL(HOME);
+  await expect(page.getByText(new RegExp(`${total} niños?\\s*·`))).toBeVisible();
+});
+
 test("muestra la fecha del visitante en español", async ({ page }) => {
   await gotoHydrated(page, HOME);
 
@@ -129,7 +155,7 @@ test("formatea las horas en la zona horaria del visitante", async ({
     for (const timeZoneId of zones) {
       const context = await browser.newContext({ timezoneId: timeZoneId });
       const page = await context.newPage();
-      await loginAsStaff(page);
+      await loginAsTestStaff(page);
       await gotoHydrated(page, HOME);
 
     const times = page.locator("article time");
@@ -333,10 +359,9 @@ test("«Nueva publicación» abre un formulario vacío y «Compartí un momento�
   const dialog = await openCreatePost(page);
   await expect(page).toHaveURL(HOME);
   await expect(dialog.getByLabel("Descripción")).toHaveValue("");
-  await expect(dialog.getByRole("button", { name: "Mateo" })).toHaveAttribute(
-    "aria-pressed",
-    "false",
-  );
+  await expect(
+    dialog.getByRole("button", { name: SOLES_FIRST_NAME, exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
   await expect(dialog.getByRole("button", { name: "Logro" })).toHaveAttribute(
     "aria-pressed",
     "false",
@@ -350,31 +375,26 @@ test("«Nueva publicación» abre un formulario vacío y «Compartí un momento�
   ).toBeVisible();
   await expect(dialog.getByText("Elegí un tipo de publicación.")).toBeVisible();
   await expect(dialog.getByText("Escribí una descripción.")).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Mateo" })).toBeFocused();
+  await expect(
+    dialog.getByRole("button", { name: SOLES_FIRST_NAME, exact: true }),
+  ).toBeFocused();
 });
 
-test("incluye los niños temporales de Soles, no los de Lunas y excluye sala y niños", async ({
-  page,
-}) => {
-  await gotoHydrated(page, `${BASE_URL}/kids`);
-  await addTemporaryKid(page, { name: "Mica Soles", room: "Soles" });
-  await addTemporaryKid(page, { name: "Tere Lunas", room: "Lunas" });
-
+test("ofrece solo niños activos de Soles, no los de Lunas", async ({ page }) => {
+  await gotoHydrated(page, HOME);
   const dialog = await openCreatePost(page);
-  await expect(dialog.getByRole("button", { name: "Mica" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Mateo" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Tere" })).toHaveCount(0);
 
-  await dialog.getByRole("button", { name: "Mateo" }).click();
-  await dialog.getByRole("button", { name: "Sofía" }).click();
-  await expect(dialog.getByRole("button", { name: "Mateo" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await expect(dialog.getByRole("button", { name: "Sofía" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  const solesChip = dialog.getByRole("button", {
+    name: SOLES_FIRST_NAME,
+    exact: true,
+  });
+  await expect(solesChip).toBeVisible();
+  await expect(
+    dialog.getByRole("button", { name: LUNAS_FIRST_NAME, exact: true }),
+  ).toHaveCount(0);
+
+  await solesChip.click();
+  await expect(solesChip).toHaveAttribute("aria-pressed", "true");
   await expect(
     dialog.getByRole("button", { name: "Toda la sala" }),
   ).toHaveAttribute("aria-pressed", "false");
@@ -383,20 +403,10 @@ test("incluye los niños temporales de Soles, no los de Lunas y excluye sala y n
   await expect(
     dialog.getByRole("button", { name: "Toda la sala" }),
   ).toHaveAttribute("aria-pressed", "true");
-  await expect(dialog.getByRole("button", { name: "Mateo" })).toHaveAttribute(
-    "aria-pressed",
-    "false",
-  );
-  await expect(dialog.getByRole("button", { name: "Sofía" })).toHaveAttribute(
-    "aria-pressed",
-    "false",
-  );
+  await expect(solesChip).toHaveAttribute("aria-pressed", "false");
 
-  await dialog.getByRole("button", { name: "Mateo" }).click();
-  await expect(dialog.getByRole("button", { name: "Mateo" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await solesChip.click();
+  await expect(solesChip).toHaveAttribute("aria-pressed", "true");
   await expect(
     dialog.getByRole("button", { name: "Toda la sala" }),
   ).toHaveAttribute("aria-pressed", "false");
@@ -408,8 +418,9 @@ test("publica con autora, tipo, audiencia e imágenes y se pierde al recargar", 
   await gotoHydrated(page, HOME);
   const dialog = await openCreatePost(page);
 
-  await dialog.getByRole("button", { name: "Mateo" }).click();
-  await dialog.getByRole("button", { name: "Sofía" }).click();
+  await dialog
+    .getByRole("button", { name: SOLES_FIRST_NAME, exact: true })
+    .click();
   await dialog.getByRole("button", { name: "Logro" }).click();
   await dialog
     .getByLabel("Descripción")
@@ -435,7 +446,7 @@ test("publica con autora, tipo, audiencia e imágenes y se pierde al recargar", 
   );
   await expect(first.getByText("Publicación temporal de prueba")).toBeVisible();
   await expect(
-    first.getByText("Para: Mateo Fernández, Sofía Méndez"),
+    first.getByText(`Para: ${SOLES_KID_NAME}`),
   ).toBeVisible();
   await expect(
     first.getByRole("img", { name: "Imagen adjunta: pintura.png" }),
@@ -476,7 +487,7 @@ test("publicar desde otra sección navega al feed y «Salir» limpia las publica
   await page.getByRole("button", { name: "Salir" }).click();
   await expect(page).toHaveURL(`${BASE_URL}/auth/login`);
 
-  await loginAsStaff(page);
+  await loginAsTestStaff(page);
   await expect(page.locator("article")).toHaveCount(3);
 });
 
@@ -486,7 +497,9 @@ test("valida formato, tamaño y cantidad de fotos y permite quitarlas", async ({
   await gotoHydrated(page, HOME);
   const dialog = await openCreatePost(page);
 
-  await dialog.getByRole("button", { name: "Mateo" }).click();
+  await dialog
+    .getByRole("button", { name: SOLES_FIRST_NAME, exact: true })
+    .click();
   await dialog.getByRole("button", { name: "Foto" }).click();
   await dialog.getByLabel("Descripción").fill("Foto con validación");
 
@@ -555,7 +568,9 @@ test("el fondo no cierra, Tab queda atrapado y Cancelar o Esc descartan el borra
   await opener.click();
 
   const dialog = page.getByRole("dialog", { name: "Nueva publicación" });
-  await dialog.getByRole("button", { name: "Mateo" }).click();
+  await dialog
+    .getByRole("button", { name: SOLES_FIRST_NAME, exact: true })
+    .click();
   await dialog.getByLabel("Descripción").fill("Borrador que se descarta");
 
   await page.mouse.click(1, 1);
@@ -575,7 +590,7 @@ test("el fondo no cierra, Tab queda atrapado y Cancelar o Esc descartan el borra
   const reopened = page.getByRole("dialog", { name: "Nueva publicación" });
   await expect(reopened.getByLabel("Descripción")).toHaveValue("");
   await expect(
-    reopened.getByRole("button", { name: "Mateo" }),
+    reopened.getByRole("button", { name: SOLES_FIRST_NAME, exact: true }),
   ).toHaveAttribute("aria-pressed", "false");
 
   await page.keyboard.press("Escape");
